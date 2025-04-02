@@ -1,5 +1,9 @@
-Алгоритм запуска:
+Алгоритм запуска (запуск из dosbox):
 1. Запуск DOSbox;
 2. cd \tasm3 ;
-3. compile ;
-4. start ;
+3. clear.bat ;
+4. compile.bat ;
+5. start.bat ;
+
+
+Нужно переписать код. Сейчас - основа.

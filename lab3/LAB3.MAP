@@ -1,9 +1,9 @@
 
  Start  Stop   Length Name               Class
 
- 00000H 0000FH 00010H _TEXT              CODE
- 00010H 00018H 00009H _DATA              DATA
- 00020H 0011FH 00100H STACK              STACK
+ 00000H 0000FH 00010H DATA               
+ 00010H 0010FH 00100H STACK              
+ 00110H 0015EH 0004FH CODE               
 
   Address         Publics by Name
 
@@ -11,9 +11,16 @@
   Address         Publics by Value
 
 
-Line numbers for v:\labs\lab3\lab3.obj(V:\LABS\LAB3\LAB3.ASM) segment _TEXT
+Line numbers for v:\labs\lab3\lab3.obj(V:\LABS\LAB3\LAB3.ASM) segment CODE
 
-     9 0000:0000    10 0000:0003    12 0000:0005    13 0000:0007
-    14 0000:000A    16 0000:000C    17 0000:000E
-Program entry point at 0000:0000
+    13 0011:0000    14 0011:0003    16 0011:0005    18 0011:0008
+    19 0011:000A    20 0011:000D    22 0011:0010    23 0011:0012
+    24 0011:0015    26 0011:0018    27 0011:001A    28 0011:001D
+    30 0011:0020    31 0011:0023    32 0011:0025    33 0011:0027
+    34 0011:002A    38 0011:002C    39 0011:002E    40 0011:0030
+    45 0011:0031    46 0011:0033    47 0011:0035    51 0011:0036
+    52 0011:0038    53 0011:003B    54 0011:003D    55 0011:0040
+    60 0011:0041    61 0011:0044    62 0011:0046    63 0011:0049
+    64 0011:004C    65 0011:004E
+Program entry point at 0011:0000
 
