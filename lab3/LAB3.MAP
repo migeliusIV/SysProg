@@ -1,0 +1,19 @@
+
+ Start  Stop   Length Name               Class
+
+ 00000H 0000FH 00010H _TEXT              CODE
+ 00010H 00018H 00009H _DATA              DATA
+ 00020H 0011FH 00100H STACK              STACK
+
+  Address         Publics by Name
+
+
+  Address         Publics by Value
+
+
+Line numbers for v:\labs\lab3\lab3.obj(V:\LABS\LAB3\LAB3.ASM) segment _TEXT
+
+     9 0000:0000    10 0000:0003    12 0000:0005    13 0000:0007
+    14 0000:000A    16 0000:000C    17 0000:000E
+Program entry point at 0000:0000
+
