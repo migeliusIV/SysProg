@@ -11,7 +11,7 @@ data segment
     space   db ' - ', '$'  ; разделитель " - "
     counter_outer dw 20
     counter_inner dw 20    ; Количество букв для вывода
-    start_char db ?        ; Начальный символ, введенный пользователем
+    start_char db 'А'        ; Начальный символ, введенный пользователем
 data ends
 
 code segment
@@ -21,19 +21,15 @@ MAIN PROC
         mov AX, stack      ; Загружаем адрес сегмента стека в AX
         mov SS, AX         ; Устанавливаем SS на сегмент стека
         mov SP, 100h       ; Устанавливаем указатель стека (SP) в конец стека
-
         mov AX, data
         mov DS, AX
-        ; подготовка цикла
-        ;mov CX, counter_outer    ; Счетчик цикла (20 повторений)
-; Главное меню
-;menu:
-        mov ax, 0  
+
         ; Вывод приглашения
+        call CLRSCR
         lea DX, prompt
         mov AH, 09h
         int 21h
-        
+        mov ax, 0  
         ; Чтение символа с клавиатуры (без эха)
         call GETCH
         mov start_char, AL  ; Сохраняем введенную букву
