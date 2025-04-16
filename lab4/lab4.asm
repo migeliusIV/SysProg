@@ -93,14 +93,14 @@ while_end:
         jmp while_start
 
 error_input:
-    ; end of program with an error
-    LEA DX, error_message
-    MOV AH, 09h
-    INT 21h
+        ; end of program with an error
+        lea DX, error_message
+        mov AH, 09h
+        int 21h
 
 finish: ; end of program
-    MOV AX, 4C00h
-    INT 21h
+        mov AX, 4C00h
+        int 21h
 MAIN ENDP
 
 PUTCH proc near
@@ -151,16 +151,15 @@ HEX PROC near
     int 21h
     
     ; Преобразуем старший ниббл
-    mov AL, BL
-    mov CL, 4
-    shr AL, CL
+    mov AL, BL      ; Восстанавливаем символ
+    mov CL, 4       ; Счетчик сдвига
+    shr AL, CL      ; Сдвиг вправо на 4 бита
     call PRINT_NIBBLE
     
-    ; Преобразуем младший ниббл
     mov AL, BL
-    and AL, 0Fh
+    and AL, 0Fh     ; Маскируем старшие биты
     call PRINT_NIBBLE
-    
+
     ; Восстанавливаем регистры
     pop DX
     pop CX
@@ -169,15 +168,18 @@ HEX PROC near
     ret
 HEX ENDP
 
-PRINT_NIBBLE PROC
+PRINT_NIBBLE PROC near
     ; Вход: AL - ниббл (0-15) для вывода
     ; Преобразуем ниббл в ASCII-символ
     cmp AL, 10
     jl is_digit     ; Если меньше 10 - это цифра
     add AL, 'A'-10  ; Иначе - буква A-F
     jmp print_it
+
 is_digit:
-    add AL, '0'     ; Преобразуем цифру в ASCII
+    add AL, '0'     ; Преобразуем цифру в ASCII 
+                    ;(как в cpp, когда мы вычитаем буквы)
+
 print_it:
     mov DL, AL      ; Выводим символ
     mov AH, 02h
