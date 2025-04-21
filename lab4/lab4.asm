@@ -36,13 +36,6 @@ while_start:
         ; symbol reading
         call GETCH
         mov start_char, AL
-        ; Проверяем, что введена русская буква (CP866: 0x80 - 0x9F)
-        cmp AL, 80h
-        jl error_input
-        cmp AL, 9Fh
-        jg error_input
-
-        mov start_char, AL
         ; Инициализация цикла
         ;mov BX, OFFSET alphabet  ; адрес таблицы перекодировки
         mov CX, count            ; счетчик повторений
@@ -56,36 +49,28 @@ next_letter:
         add al, start_char 
         mov DL, AL          ; Символ в DL
         call PUTCH
-        ; inc bl
+        inc bl
         push bx
-        ; Сохраняем AX для вывода кода
-        ;push AX
-
         ; Вывод разделителя
         lea DX, space
         mov AH, 09h
         int 21h
-
         ; Вывод кода символа (шестнадцатеричное представление)
-        ;pop AX    ; Retrieve character
+        ;(start_char + 20 - i)
+        pop bx
+        mov ax, count
+        add al, start_char
+        sub al, bl
+        push bx
         call HEX
 
         ; Подготовка к следующей итерации
         call CLRF
-        pop bx
+        LOOP next_letter
+        ;pop bx
         ; inc index           ; инкрементируем index для следующей итерации
-        mov al, start_char
-        add al, bl
-        cmp start_char, 9Fh       ; Проверяем, не вышли ли мы за границы алфавита
-        jl no_wrap          ; если не вышли - остаемся в цикле
-        mov bl, -1        ; Сброс индекса, если вышли за границы
-        mov start_char, 80h
+        ;inc bx
 
-no_wrap: ; if alphabet has ended
-        ; mov bl, 0          ; Загружаем новый индекс\
-        inc bl
-        push bx
-        LOOP next_letter        ;  LOOP decreases CX by 1
 while_end:
         ; Запрос на повторение
         lea DX, end_option
@@ -95,12 +80,6 @@ while_end:
         cmp AL, '*'
         jne finish
         jmp while_start
-        
-error_input:
-        ; end of program with an error
-        lea DX, error_message
-        mov AH, 09h
-        int 21h
 
 finish: ; end of program
         mov AX, 4C00h
@@ -154,16 +133,16 @@ HEX PROC near
     mov DL, 'x'
     int 21h
     
+    mov AL, BL
+    and AL, 0Fh     ; Маскируем старшие биты
+    call PRINT_NIBBLE
+
     ; Преобразуем старший ниббл
     mov AL, BL      ; Восстанавливаем символ
     mov CL, 4       ; Счетчик сдвига
     shr AL, CL      ; Сдвиг вправо на 4 бита
     call PRINT_NIBBLE
     
-    mov AL, BL
-    and AL, 0Fh     ; Маскируем старшие биты
-    call PRINT_NIBBLE
-
     ; Восстанавливаем регистры
     pop DX
     pop CX
