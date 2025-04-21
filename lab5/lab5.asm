@@ -46,10 +46,16 @@ MAIN PROC
     
     LOOP1: 
         call GETCH  ; Ввод символа
-        cmp AL, '*' 
-        JE GO0 
-        cmp AL, '$' 
-        JE GO0 
+        mov dl, al
+        cmp al, '$'
+        je GO0
+        cmp al, '*' 
+        jne not_sys
+        cmp si, 0
+        je GO1
+        
+    not_sys:
+        call putch
         mov BUF_SYMBS[SI], AL  ; Запись в буфер
         inc SI 
         LOOP LOOP1 
@@ -115,10 +121,16 @@ CLRF PROC
 CLRF ENDP 
 
 GETCH PROC 
-    mov AH, 01h 
+    mov AH, 07h ; вывод без эха
     int 21h 
     ret 
 GETCH ENDP 
+
+GETSYSCH PROC 
+    mov AH, 07h 
+    int 21h 
+    ret 
+GETSYSCH ENDP 
 
 HEX PROC 
     push AX 
