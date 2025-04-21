@@ -10,8 +10,6 @@ data segment
     count   dw 20
 
     ; Таблица русских букв (А-Я) в кодировке CP866
-    alphabet db 80h, 81h, 82h, 83h, 84h, 85h, 86h, 87h, 88h, 89h, 8Ah, 8Bh, 8Ch, 8Dh, 8Eh, 8Fh, 90h, 91h, 92h, 93h, 94h, 95h, 96h, 97h, 98h, 99h, 9Ah, 9Bh, 9Ch, 9Dh, 9Eh, 9Fh
-
     start_char db ?
     index db ?
     error_message db "Error: Input character out of alphabet range$"
@@ -44,20 +42,22 @@ while_start:
         cmp AL, 9Fh
         jg error_input
 
-        ; Вычисляем индекс в таблице перекодировки (AL - 0x80)
-        sub AL, 80h
-        mov index, AL
+        mov start_char, AL
         ; Инициализация цикла
-        mov BX, OFFSET alphabet  ; адрес таблицы перекодировки
+        ;mov BX, OFFSET alphabet  ; адрес таблицы перекодировки
         mov CX, count            ; счетчик повторений
+        sub al, start_char
+        push AX
 
 next_letter:
         ; Подготовка к XLAT
-        mov AL, index          ; Получаем текущий индекс
-        push AX             ; Сохраняем индекс
-        XLAT                 ; AL = alphabet[AL]
+        pop bx
+        mov ax, bx
+        add al, start_char 
         mov DL, AL          ; Символ в DL
         call PUTCH
+        ; inc bl
+        push bx
         ; Сохраняем AX для вывода кода
         ;push AX
 
@@ -72,16 +72,20 @@ next_letter:
 
         ; Подготовка к следующей итерации
         call CLRF
-        ;pop AX              ; Retrieve index
-        inc index           ; инкрементируем index для следующей итерации
-        cmp index, 32       ; Проверяем, не вышли ли мы за границы алфавита
+        pop bx
+        ; inc index           ; инкрементируем index для следующей итерации
+        mov al, start_char
+        add al, bl
+        cmp start_char, 9Fh       ; Проверяем, не вышли ли мы за границы алфавита
         jl no_wrap          ; если не вышли - остаемся в цикле
-        mov index, 0        ; Сброс индекса, если вышли за границы
+        mov bl, -1        ; Сброс индекса, если вышли за границы
+        mov start_char, 80h
 
 no_wrap: ; if alphabet has ended
-        mov AL, index          ; Загружаем новый индекс
+        ; mov bl, 0          ; Загружаем новый индекс\
+        inc bl
+        push bx
         LOOP next_letter        ;  LOOP decreases CX by 1
-
 while_end:
         ; Запрос на повторение
         lea DX, end_option
@@ -91,7 +95,7 @@ while_end:
         cmp AL, '*'
         jne finish
         jmp while_start
-
+        
 error_input:
         ; end of program with an error
         lea DX, error_message
