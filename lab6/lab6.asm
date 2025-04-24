@@ -7,9 +7,12 @@ MYCODE SEGMENT 'CODE'
 LET  DB 'A'                  ; Символ-маркер
 HEXTAB DB '0123456789ABCDEF' ; Таблица для HEX-вывода
 msg1 db 'Число байт параметров в строке:$'
-msg2 DB 'Число параметров в командной строке:$'
-msg3 DB 'Параметры:$'
+msg_first DB 'Первый параметр: $'
+msg_sec DB 'Параметры:$'
 msg4 DB 'Параметры отсутствуют$'
+msg_sec_true DB 'Присутствует$'
+msg_sec_false DB 'Отсутствует$'
+my_name DB 'Sorokin'
 adrPSP dw 0                  ; Адрес PSP
 bufpar DB 128 DUP ('$')      ; Буфер для параметров
 Counter DB 0                 ; Счетчик байт параметров
@@ -32,8 +35,8 @@ START:
     MOV Counter, BL          ; Сохраняем счетчик
     
     ; Проверка наличия параметров
-    CMP BL, 00H
-    JE FIN0                  ; Если параметров нет - завершаем
+    ;CMP BL, 00H
+    ;JE FIN0                  ; Если параметров нет - завершаем
     
     ; Вывод сообщения о числе байт параметров
     MOV AH, 09h
@@ -60,6 +63,7 @@ savepar:
     CMP DL, ' '
     JNE S2
     INC CounterPar           ; Увеличиваем счетчик параметров
+    ;jmp sec_task
 S2:
     INC SI                   ; Следующая позиция в буфере
     INC BX                   ; Следующий символ в PSP
@@ -69,21 +73,52 @@ S2:
     MOV bufpar[SI], '$'
     
     ; Вывод параметров
-    MOV DX, OFFSET msg3
+    MOV DX, OFFSET msg_sec
     MOV AH, 09H
     INT 21H
     MOV DX, OFFSET bufpar
     INT 21H 
     CALL CRLF
-    
-    ; Вывод числа параметров
-    MOV DX, OFFSET msg2
+
+first_task: 
+    MOV DX, OFFSET msg_first
     MOV AH, 09H
     INT 21H
-    MOV DL, CounterPar
-    CALL HEXPR
+    lea si, my_name
+    lea di, bufpar
+    mov cx, 7     ; 8 слов
+    repe cmpsb     ; сравниваем слова
+    je equal
+    mov dl, 80h      ; если строки не равны
+    jmp first_end
+equal:
+    mov dl, 81h      ; если строки равны
+
+first_end:
+    call PUTC
     CALL CRLF
-    JMP FIN
+
+sec_task:
+    ; Вывод числа параметров
+    MOV DX, OFFSET msg_sec
+    MOV AH, 09H
+    INT 21H
+    cmp CounterPar, 2
+    jne not_exist_sec
+    mov dx, OFFSET msg_sec_true
+    mov AH, 09H
+    int 21H
+    jmp sec_param_proc_end
+
+not_exist_sec:
+    mov dx, OFFSET msg_sec_false
+    mov AH, 09H
+    int 21H
+    jmp sec_param_proc_end
+
+sec_param_proc_end:
+    call CRLF
+    jmp FIN
     
 ; Обработка отсутствия параметров
 FIN0:
