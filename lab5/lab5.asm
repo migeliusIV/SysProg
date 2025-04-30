@@ -1,4 +1,4 @@
-; Пример программы ЛР5
+;.MODEL LARGE, C 
 ; СЕГМЕНТ ДАННЫХ
 DTSEG SEGMENT PARA 'DATA' 
     ; Справочные сообщения для пользователя
@@ -24,9 +24,12 @@ STSEG SEGMENT PARA 'STACK'
     DB 200 DUP(0) 
 STSEG ENDS 
 
+
+;PUBLIC _CALCULATE
+
 CDSEG SEGMENT PARA 'CODE' 
     ASSUME DS:DTSEG, SS:STSEG, CS:CDSEG 
-
+    EXTRN _calculate:NEAR  ; Импортируем функцию из C++
 MAIN PROC 
     ; Инициализация сегмента данных в коде
     mov AX, DTSEG 
@@ -57,42 +60,7 @@ menu:
     jmp menu
 
 appendix:
-    call CLRF
-    call CLRSCR
-    mov DX, OFFSET msg_apndx
-    call PUTMES
-    push 0
-
-apnd_input:
-    ; input
-    call GETCH
-    cmp al, '0'
-    jl not_numb
-    cmp al, '9'
-    jg not_numb
-    mov dl, al
-    call putch
-    ; proces
-    pop ax
-    sub al, 30h ; -0
-    add al, dl
-    mov bl, 10
-    mul bl
-    push ax
-
-not_numb:
-    cmp al, '$'
-    jne apnd_input
-    ; proces
-    pop ax
-    mov bx, 254      ; 2.54 ? 100 (scaled to avoid decimals)
-    mul bx           ; AX = AX * BX (result in DX:AX)
-    mov bx, 100      ; Divisor to rescale
-    div bx     
-    ; output
-    push ax
-    call output
-
+    call _calculate  
     db 0Fh, 84h             ; Код операции для JE near (вручную)
     dw offset END_PROG - ($ + 2)  ; 16-битное смещение
 
@@ -130,7 +98,7 @@ lab5:
         je GO1
         
     not_sys:
-        call putch
+        call PUTCH
         mov BUF_SYMBS[SI], AL  ; Запись в буфер
         inc SI 
         LOOP LOOP1 
