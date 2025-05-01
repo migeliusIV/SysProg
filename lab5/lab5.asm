@@ -1,4 +1,4 @@
-;.MODEL LARGE, C 
+.MODEL large, C 
 ; СЕГМЕНТ ДАННЫХ
 DTSEG SEGMENT PARA 'DATA' 
     ; Справочные сообщения для пользователя
@@ -21,20 +21,20 @@ DTSEG SEGMENT PARA 'DATA'
 DTSEG ENDS
 
 STSEG SEGMENT PARA 'STACK' 
-    DB 200 DUP(0) 
+    DB 400 DUP(0) 
 STSEG ENDS 
 
 
 ;PUBLIC _CALCULATE
+EXTRN calculate:proc  ; Импортируем функцию из C++
 
 CDSEG SEGMENT PARA 'CODE' 
     ASSUME DS:DTSEG, SS:STSEG, CS:CDSEG 
-    EXTRN _calculate:NEAR  ; Импортируем функцию из C++
+    
 MAIN PROC 
     ; Инициализация сегмента данных в коде
     mov AX, DTSEG 
     mov DS, AX 
-
     ;--- Меню
     ; 1 - Запуск 5 ЛР
     ; 2 - Запуск допа
@@ -60,7 +60,8 @@ menu:
     jmp menu
 
 appendix:
-    call _calculate  
+    call CLRF
+    call calculate  
     db 0Fh, 84h             ; Код операции для JE near (вручную)
     dw offset END_PROG - ($ + 2)  ; 16-битное смещение
 
@@ -136,26 +137,26 @@ END_PROG:
 MAIN ENDP 
 
 ; Процедуры
-PUTCH PROC ; процедура вывода символа
+PUTCH PROC near ; процедура вывода символа
     mov AH, 02h 
     int 21h 
     ret 
 PUTCH ENDP 
 
-PUTSPACE PROC 
+PUTSPACE PROC near
     mov DL, ' ' 
     mov AH, 02h 
     int 21h 
     ret 
 PUTSPACE ENDP 
 
-PUTMES PROC ; процедура вывода массива
+PUTMES PROC near ; процедура вывода массива
     mov AH, 09h 
     int 21h 
     ret 
 PUTMES ENDP 
 
-CLRF PROC 
+CLRF PROC near
     mov DL, 0Ah 
     call PUTCH 
     mov DL, 0Dh 
@@ -172,19 +173,19 @@ CLRSCR proc near ; процедура очистки экрана
     ret
 CLRSCR endp
 
-GETCH PROC 
+GETCH PROC NEAR
     mov AH, 07h ; вывод без эха
     int 21h 
     ret 
 GETCH ENDP 
 
-GETCHECHO PROC 
+GETCHECHO PROC near
     mov AH, 01h 
     int 21h 
     ret 
 GETCHECHO ENDP 
 
-HEX PROC 
+HEX PROC near
     push AX 
     mov DL, AL 
     SHR DL, 4 
