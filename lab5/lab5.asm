@@ -31,7 +31,7 @@ EXTRN calculate:proc  ; Импортируем функцию из C++
 CDSEG SEGMENT PARA 'CODE' 
     ASSUME DS:DTSEG, SS:STSEG, CS:CDSEG 
     
-MAIN PROC 
+MAIN PROC  
     ; Инициализация сегмента данных в коде
     mov AX, DTSEG 
     mov DS, AX 
@@ -62,7 +62,8 @@ menu:
 appendix:
     call CLRF
     call calculate  
-    db 0Fh, 84h             ; Код операции для JE near (вручную)
+    call GETCH                    ; задержка
+    db  0E9h                      ; Код операции для jmp near (вручную)
     dw offset END_PROG - ($ + 2)  ; 16-битное смещение
 
 lab5:
