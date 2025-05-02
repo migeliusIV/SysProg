@@ -5,8 +5,8 @@
 ;  tasm.exe /l tsr.asm
 ;  tlink /t /x tsr.obj
 ;
-;  МГТУ им. Н.Э. Баумана, ИУ5-43Б, 2025 г.
-;  Сорокин М.А.
+;  МГТУ им. Н.Э. Баумана, ИУ5-45Б, 2024 г.
+;  Удалова В.А.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 code segment	'code'
@@ -18,16 +18,16 @@ code segment	'code'
 
 	; данные
 	replaceWith 				DB	'' ; 
-	ignoredChars                DB  'qwertyuiopasdfghjklzxcvbnm' ; список игнорируемых символов
+	ignoredChars                DB  'qwertyuiopasdfghjklzxcvbnm' список игнорируемых символов
 	ignoredLength 				equ	$-ignoredChars ; длина строки ignoredChars
 	ignoreEnabled 				DB	0	; флаг функции игнорирования ввода
 	translateFrom 				DB	'F,DUL'	; символы для замены (АБВГД на англ. раскладке)
-	translateTo 				DB	'АБВГД'	; символы на которые будет идти замена
+	translateTo 					DB	'АБВГД'	; символы на которые будет идти замена'	; символы на которые будет идти замена
 	translateLength				equ	$-translateTo	; длина строки trasnlateFrom
 	translateEnabled			DB	0	; флаг функции перевода
 
-	signaturePrintingEnabled 	DB	0	; флаг функции вывода информации об авторе
-	cursiveEnabled 			DB	0	; флаг перевода символа в курсив
+	signaturePrintingEnabled 		DB	0	; флаг функции вывода информации об авторе
+	cursiveEnabled 				DB	0	; флаг перевода символа в курсив
 
 
 cursiveSymbol               DB 00000000b ; символ, составленный из единичек (его курсивный вариант)
@@ -47,29 +47,33 @@ cursiveSymbol               DB 00000000b ; символ, составленный из единичек (его
 							DB 00000000b
 							DB 00000000b
 
+
+
+
 	charToCursiveIndex 		DB 'Н' ; символ для замены
-	savedSymbol 			DB 16 dup(0FFh)	; переменная для хранения старого символа
+	savedSymbol 					DB 16 dup(0FFh)	; переменная для хранения старого символа
 
-	true 					equ	0FFh ; константа истинности
-	old_int9hOffset 		DW	?	; адрес старого обработчика int 9h
-	old_int9hSegment 		DW	?	; сегмент старого обработчика int 9h
-	old_int1ChOffset 		DW	?	; адрес старого обработчика int 1Ch
-	old_int1ChSegment 		DW	?	; сегмент старого обработчика int 1Ch
-	old_int2FhOffset 		DW	?	; адрес старого обработчика int 2Fh
-	old_int2FhSegment 		DW	?	; сегмент старого обработчика int 2Fh
+	true 								 	equ	0FFh ; константа истинности
+	old_int9hOffset 				DW	?	; адрес старого обработчика int 9h
+	old_int9hSegment 				DW	?	; сегмент старого обработчика int 9h
+	old_int1ChOffset 				DW	?	; адрес старого обработчика int 1Ch
+	old_int1ChSegment 			    DW	?	; сегмент старого обработчика int 1Ch
+	old_int2FhOffset 				DW	?	; адрес старого обработчика int 2Fh
+	old_int2FhSegment 			    DW	?	; сегмент старого обработчика int 2Fh
 
-	unloadTSR				DB	0 ; 1 - выгрузить резидент
-	notLoadTSR		     	DB	0	; 1 - не загружать
-	counter	  				DW	0
-	printDelay				equ	3 ; задержка перед выводом "подписи" в секундах
-	printPos				DW	0; положение подписи на экране. 0 - верх, 1 - центр, 2 - низ
+	unloadTSR						DB	0 ; 1 - выгрузить резидент
+	notLoadTSR				     	DB	0	; 1 - не загружать
+	counter	  					    DW	0
+	printDelay					    equ	3 ; задержка перед выводом "подписи" в секундах
+	printPos						DW	0; положение подписи на экране. 0 - верх, 1 - центр, 2 - низ
 
-	signatureLine1			DB	179, 'Сорокин Михаил                                         ', 179
-	Line1_length 			equ	$-signatureLine1
-	signatureLine2			DB	179, 'ИУ5-43Б                                                ', 179
-	Line2_length 			equ	$-signatureLine2
-	signatureLine3			DB	179, 'Вариант #21                                            ', 179
-	Line3_length 			equ	$-signatureLine3
+	;@ заменить на собственные данные. формирование таблицы идет по строке большей длины (1я строка).
+	signatureLine1				DB	179, 'Удалова Виктория                                       ', 179
+	Line1_length 					equ	$-signatureLine1
+	signatureLine2				DB	179, 'ИУ5-45Б                                                ', 179
+	Line2_length 					equ	$-signatureLine2
+	signatureLine3				DB	179, 'Вариант #16                                            ', 179
+	Line3_length 					equ	$-signatureLine3
 	helpMsg DB '>tsr.com [/?] ', 10, 13
 					DB ' [/?] - вывод данной справки', 10, 13
 					DB '  UNLDTSR.COM - выгрузка резидента из памяти', 10, 13
@@ -78,32 +82,32 @@ cursiveSymbol               DB 00000000b ; символ, составленный из единичек (его
 					DB '  F6  - включение и отключение частичной русификации клавиатуры(F,DUL -> АБВГД)', 10, 13
 					DB '  F7  - включение и отключение режима Ограничить ввод <<Строчные латинские буквы>>', 10, 13
 
-	helpMsg_length			equ  $-helpMsg
-	errorParamMsg			DB	'Ошибка параметров коммандной строки', 10, 13
+	helpMsg_length				equ  $-helpMsg
+	errorParamMsg					DB	'Ошибка параметров коммандной строки', 10, 13
 	errorParamMsg_length	equ	$-errorParamMsg
 
-	tableTop				DB	218, Line1_length-2 dup (196), 191
+	tableTop						DB	218, Line1_length-2 dup (196), 191
 	tableTop_length 		equ	$-tableTop
-	tableBottom				DB	192, Line1_length-2 dup (196), 217
+	tableBottom					DB	192, Line1_length-2 dup (196), 217
 	tableBottom_length 	equ  $-tableBottom
 
 	; сообщения
-	installedMsg			DB  'Резидент загружен!$'
+	installedMsg					DB  'Резидент загружен!$'
 	alreadyInstalledMsg		DB  'Резидент уже загружен$'
-	noMemMsg				DB  'Недостаточно памяти$'
-	notInstalledMsg			DB  'Не удалось загрузить резидент$'
+	noMemMsg						  DB  'Недостаточно памяти$'
+	notInstalledMsg				DB  'Не удалось загрузить резидент$'
 
-	removedMsg				DB  'Резидент выгружен'
+	removedMsg					DB  'Резидент выгружен'
 	removedMsg_length		equ	$-removedMsg
 
-	noRemoveMsg				DB  'Не удалось выгрузить резидент'
+	noRemoveMsg					DB  'Не удалось выгрузить резидент'
 	noRemoveMsg_length	equ	$-noRemoveMsg
 
-	f1_txt					DB	'F4'
-	f2_txt					DB	'F5'
-	f3_txt					DB	'F6'
-	f4_txt					DB	'F7'
-	fx_length				equ	$-f4_txt
+	f1_txt						DB	'F4'
+	f2_txt						DB	'F5'
+	f3_txt						DB	'F6'
+	f4_txt						DB	'F7'
+	fx_length					equ	$-f4_txt
 
 	changeFx proc
 		push AX
@@ -234,6 +238,11 @@ cursiveSymbol               DB 00000000b ; символ, составленный из единичек (его
 		mov	ES, AX
 		in	AL, 60h	; записываем в AL скан-код нажатой клавиши
 
+		
+
+		
+		;@ далее - код для всех вариантов
+
 		;проверка F4-F7
 		_test_Fx:
 		sub AL, 58 ; в AL теперь номер функциональной клавиши
@@ -298,6 +307,15 @@ cursiveSymbol               DB 00000000b ; символ, составленный из единичек (его
 
 	; блокируем
 	_block:
+		;mov ES:[1Ch], BX ;блокировка ввода символа
+		;@ если по варианту нужно не блокировать ввод символа,
+		;@ а заменять одни символы другими,
+		;@ замените строку выше строкой
+		;mov ES:[BX], AX
+		;@ на месте AX может быть '*' для замены всех символов множества ignoredChars на звёздочки
+		;@ или, для перевода одних символов в другие - завести массив
+		;@ replaceWith DB '...', где перечислить символы, на которые пойдёт замена
+		;@ и раскомментировать строки ниже:
 		  xor AX, AX
 		  mov AL, replaceWith[SI]
 		  mov ES:[1Ch], BX	; блокировка ввода символа
@@ -491,6 +509,7 @@ printSignature proc
 	cmp printPos, 2
 	je _printBottom
 
+	;все числа подобраны на глаз...
 	_printTop:
 		mov DH, 0
 		mov DL, 15
@@ -517,7 +536,7 @@ printSignature proc
 		push DX
 		lea BP, tableTop				;помещаем в BP указатель на выводимую строку
 		mov CX, tableTop_length		;в CX - длина строки
-		mov BL, 0111b 				;цвет выводимого текста
+		mov BL, 0111b 				;цвет выводимого текста ref: http://en.wikipedia.org/wiki/BIOS_color_attributes
 		mov AX, 1301h					;AH=13h - номер ф-ии, AL=01h - курсор перемещается при выводе каждого из символов строки
 		int 10h
 		pop DX
@@ -651,6 +670,29 @@ setCursive endp
 
 ;=== Функция смены начертания символа (курсив/нормальное)
 ;===
+; *** входные данные
+; DL = номер символа для замены
+; CX = Кол-во символов заменяемых изображений символов
+; (начиная с символа указанного в DX)
+; ES:bp = адрес таблицы
+;
+; *** описание работы процедуры
+; Происходит вызов int 10h (видеосервис)
+; с функцией AH = 11h (функции знакогенератора)
+; Параметр AL = 0 сообщает, что будет заменено изображение
+; символа для текущего шрифта
+; В случаях, когда AL = 1 или 2, будет заменено изображение
+; только для опредленного шрифта (8x14 и 8x8 соответственно)
+; Параметр BH = 0Eh сообщает, что на опредление каждого изображения символа
+; расходуется по 14 байт (режим 8x14 бит как раз 14 байт)
+; Параметр BL = 0 - блок шрифта для загрузки (от 0 до 4)
+;
+; *** результат
+; изображение указанного(ых) символа(ов) будет заменено
+; на предложенное пользователем.
+; Изменению подвергнутся все символы, находящиеся на экране,
+; то есть если изображение заменено, старый вариант нигде уже не проявится
+
 changeFont proc
 	push AX
 	push BX
@@ -664,6 +706,25 @@ changeFont endp
 
 ;=== Функция сохранения нормального начертания символа
 ;===
+; *** входные данные
+; BH - тип возвращаемой символьной таблицы
+;   0 - таблица из int 1fh
+;   1 - таблица из int 44h
+;   2-5 - таблица из 8x14, 8x8, 8x8 (top), 9x14
+;   6 - 8x16
+;
+; *** описание работы процедуры
+; Происходит вызов int 10h (видеосервис)
+; с функцией AH = 11h (функции знакогенератора)
+; Параметр AL = 30 - подфункция получения информации о EGA
+;
+; *** результат
+; в ES:BP находится таблица символов (полная)
+; в CX находится байт на символ
+; в DL количество экранных строк
+; ВАЖНО! Происходит сдвиг регистра ES
+; ( ES становится равным C000h )
+
 saveFont proc
 	push AX
 	push BX
@@ -694,6 +755,10 @@ _initTSR: ; старт резидента
 	mov AX,3509h                    ; получить в ES:BX вектор 09
     int 21h                         ; прерывания
 
+	;@ === Удаление резидента из памяти ===
+	;@ Если по варианту необходимо выгружать резидент по повторному запуску приложений,
+	;@ нужно закомментировать следующие 3 строки, а также
+	;@ содержимое метки _finishTSR ф-ии commandParamsParser, но не саму метку!
 	cmp unloadTSR, true
 	je _removingOnParameter
 	jmp _notRemovingNow
@@ -704,16 +769,18 @@ _initTSR: ; старт резидента
 		int 2Fh
 		cmp AH, 'i'  ; проверка того, загружена ли уже программа
 		je _remove
-		mov AH, 09h
-		lea DX, notInstalledMsg
-		int 21h
-		int 20h
+		mov AH, 09h				;@ для выгрузки резидента по повторному запуску закомментировать эту строку
+		lea DX, notInstalledMsg	;@ для выгрузки резидента по повторному запуску закомментировать эту строку
+		int 21h					;@ для выгрузки резидента по повторному запуску закомментировать эту строку
+		int 20h					;@ для выгрузки резидента по повторному запуску закомментировать эту строку
 
 	_notRemovingNow:
 
 	cmp notLoadTSR, true			; если была выведена справка
 	je _exit_tmp						; просто выходим
 
+	;@ Если по варианту необходимо выгружать резидент по повторному запуску, то комментируем 5 строк ниже
+	;@ если необходимо выгружать по параметру коммандной строки, то оставляем их
 	mov AH, 0FFh
 	mov AL, 0
 	int 2Fh
@@ -808,6 +875,11 @@ commandParamsParser proc
 		lodsw       				;Получаем два символа
 		cmp AX, '?/' 				;Это '/?' (данные расположены в обратном порядк, т.е. AL:AH вместо AH:AL)
 		je _question
+		;cmp AX, 'u/'
+		;je _finishTSR
+
+		;cmp AH, '/'
+		;je _errorParam
 
 		jmp _exitHelp
 
@@ -824,6 +896,10 @@ commandParamsParser proc
 		not notLoadTSR	        ;флаг того, что необходимо не загружать резидент
 		jmp _nextChar
 
+	;@ === Удаление резидента из памяти ===
+	;@ Если по варианту необходимо выгружать резидент по параметру '/u' коммандной строки,
+	;@ нужно использовать следующий код, в остальных случаях необходимо закомменитровать
+	;@ этот код, кроме названия метки! (по желанию можно избавиться и от метки, но аккуратно просмотреть использование)
 	_finishTSR:
 		not unloadTSR		      ;флаг того, что необходимо выгузить резидент
 		jmp _nextChar
