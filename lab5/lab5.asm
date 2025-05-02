@@ -26,15 +26,18 @@ STSEG ENDS
 
 
 ;PUBLIC _CALCULATE
-EXTRN calculate:proc  ; Импортируем функцию из C++
+PUBLIC _MAIN_ASM 
+
+EXTRN main:proc  ; Импортируем функцию из C++
 
 CDSEG SEGMENT PARA 'CODE' 
     ASSUME DS:DTSEG, SS:STSEG, CS:CDSEG 
     
-MAIN PROC  
+_MAIN_ASM PROC  
     ; Инициализация сегмента данных в коде
     mov AX, DTSEG 
-    mov DS, AX 
+    mov DS, AX
+    
     ;--- Меню
     ; 1 - Запуск 5 ЛР
     ; 2 - Запуск допа
@@ -61,7 +64,7 @@ menu:
 
 appendix:
     call CLRF
-    call calculate  
+    call main  
     call GETCH                    ; задержка
     db  0E9h                      ; Код операции для jmp near (вручную)
     dw offset END_PROG - ($ + 2)  ; 16-битное смещение
@@ -135,7 +138,7 @@ lab5:
 END_PROG: 
     mov AH, 4Ch 
     int 21h 
-MAIN ENDP 
+_MAIN_ASM ENDP 
 
 ; Процедуры
 PUTCH PROC near ; процедура вывода символа
@@ -211,4 +214,4 @@ OUTPUT PROC near
 OUTPUT ENDP 
 
 CDSEG ENDS 
-END MAIN
+END _MAIN_ASM 
