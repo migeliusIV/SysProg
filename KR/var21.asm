@@ -5,8 +5,8 @@
 ;  tasm.exe /l tsr.asm
 ;  tlink /t /x tsr.obj
 ;
-;  МГТУ им. Н.Э. Баумана, ИУ5-45Б, 2024 г.
-;  Удалова В.А.
+;  МГТУ им. Н.Э. Баумана, ИУ5-43Б, 2025 г.
+;  Сорокин М. А.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 code segment	'code'
@@ -17,70 +17,70 @@ code segment	'code'
 	jmp _initTSR ; на начало программы
 
 	; данные
-	replaceWith 				DB	'' ; 
-	ignoredChars                DB  'qwertyuiopasdfghjklzxcvbnm' список игнорируемых символов
-	ignoredLength 				equ	$-ignoredChars ; длина строки ignoredChars
-	ignoreEnabled 				DB	0	; флаг функции игнорирования ввода
-	translateFrom 				DB	'F,DUL'	; символы для замены (АБВГД на англ. раскладке)
-	translateTo 					DB	'АБВГД'	; символы на которые будет идти замена'	; символы на которые будет идти замена
-	translateLength				equ	$-translateTo	; длина строки trasnlateFrom
+	replaceWith 			DB	''
+	ignoredChars                		DB  	'ЙЦУКЕНГШЩЗХЪФЫВАПРОЛДЖЭЯЧСМИТЬБЮйцукенгшщзхъфывапролджэячсмитьбю'
+	ignoredLength 			equ	$-ignoredChars ; длина строки ignoredChars
+	ignoreEnabled 			DB	0	; флаг функции игнорирования ввода
+	translateFrom 			DB	'F<DUL'	; символы для замены (РСТУФ на англ. раскладке)
+	translateTo 			DB	'АБВГД'	; символы на которые будет идти замена'	; символы на которые будет идти замена
+	translateLength			equ	$-translateTo	; длина строки trasnlateFrom
 	translateEnabled			DB	0	; флаг функции перевода
 
 	signaturePrintingEnabled 		DB	0	; флаг функции вывода информации об авторе
-	cursiveEnabled 				DB	0	; флаг перевода символа в курсив
+	cursiveEnabled 			DB	0	; флаг перевода символа в курсив
 
 
-cursiveSymbol               DB 00000000b ; символ, составленный из единичек (его курсивный вариант)
-							DB 00000000b
-							DB 00000000b
-							DB 11100011b
-							DB 11100011b
-							DB 11100011b
-							DB 11100011b
-							DB 11100011b
-							DB 11111111b
-							DB 11111111b
-							DB 11100011b
-							DB 11100011b
-							DB 11100011b
-							DB 11100011b
-							DB 00000000b
-							DB 00000000b
+	cursiveSymbol 	DB 00000000b ; символ, составленный из единичек (его курсивный вариант)
+			DB 00000000b
+			DB 00000000b
+			DB 11000011b
+			DB 11000011b
+			DB 11000110b
+			DB 11000110b
+			DB 01101100b
+			DB 00111100b
+			DB 00011000b
+			DB 00110000b
+			DB 01100000b
+			DB 11000000b
+			DB 00000000b
+			DB 00000000b
+			DB 00000000b
 
 
 
 
-	charToCursiveIndex 		DB 'Н' ; символ для замены
-	savedSymbol 					DB 16 dup(0FFh)	; переменная для хранения старого символа
+	charToCursiveIndex 		DB 'У' 		; символ для замены
+	savedSymbol 		DB 16 dup(0FFh)	; переменная для хранения старого символа
 
-	true 								 	equ	0FFh ; константа истинности
-	old_int9hOffset 				DW	?	; адрес старого обработчика int 9h
-	old_int9hSegment 				DW	?	; сегмент старого обработчика int 9h
-	old_int1ChOffset 				DW	?	; адрес старого обработчика int 1Ch
-	old_int1ChSegment 			    DW	?	; сегмент старого обработчика int 1Ch
-	old_int2FhOffset 				DW	?	; адрес старого обработчика int 2Fh
-	old_int2FhSegment 			    DW	?	; сегмент старого обработчика int 2Fh
+	true 			equ	0FFh 	; константа истинности
+	old_int9hOffset 		DW	?	; адрес старого обработчика int 9h
+	old_int9hSegment 		DW	?	; сегмент старого обработчика int 9h
+	old_int1ChOffset 		DW	?	; адрес старого обработчика int 1Ch
+	old_int1ChSegment 		DW	?	; сегмент старого обработчика int 1Ch
+	old_int2FhOffset 		DW	?	; адрес старого обработчика int 2Fh
+	old_int2FhSegment 		DW	?	; сегмент старого обработчика int 2Fh
 
 	unloadTSR						DB	0 ; 1 - выгрузить резидент
-	notLoadTSR				     	DB	0	; 1 - не загружать
-	counter	  					    DW	0
-	printDelay					    equ	3 ; задержка перед выводом "подписи" в секундах
-	printPos						DW	0; положение подписи на экране. 0 - верх, 1 - центр, 2 - низ
+	notLoadTSR					DB	0 ; 1 - не загружать
+	counter	  					DW	0
+	printDelay					equ	3 ; задержка перед выводом "подписи" в секундах
+	printPos						DW	1 ; положение подписи на экране. 0 - верх, 1 - центр, 2 - низ
 
 	;@ заменить на собственные данные. формирование таблицы идет по строке большей длины (1я строка).
-	signatureLine1				DB	179, 'Удалова Виктория                                       ', 179
+	signatureLine1				DB	179, 'Сорокин Михаил                                    ', 179
 	Line1_length 					equ	$-signatureLine1
-	signatureLine2				DB	179, 'ИУ5-45Б                                                ', 179
+	signatureLine2				DB	179, 'ИУ5-43Б                                           ', 179
 	Line2_length 					equ	$-signatureLine2
-	signatureLine3				DB	179, 'Вариант #16                                            ', 179
+	signatureLine3				DB	179, 'Вариант #21                                       ', 179
 	Line3_length 					equ	$-signatureLine3
 	helpMsg DB '>tsr.com [/?] ', 10, 13
 					DB ' [/?] - вывод данной справки', 10, 13
-					DB '  UNLDTSR.COM - выгрузка резидента из памяти', 10, 13
-					DB '  F4  - вывод ФИО и группы по таймеру в верх экрана', 10, 13
-					DB '  F5  - включение и отключения курсивного вывода русского символа Н', 10, 13
-					DB '  F6  - включение и отключение частичной русификации клавиатуры(F,DUL -> АБВГД)', 10, 13
-					DB '  F7  - включение и отключение режима Ограничить ввод <<Строчные латинские буквы>>', 10, 13
+					DB ' [/u] - выгрузка резидента из памяти', 10, 13
+					DB '  F1  - вывод ФИО и группы по таймеру в центре экрана', 10, 13
+					DB '  F2  - включение и отключения курсивного вывода русского символа У', 10, 13
+					DB '  F3  - включение и отключение частичной русификации клавиатуры(F<DUL -> АБВГД)', 10, 13
+					DB '  F4  - включение и отключение режима замены русских букв символом - *', 10, 13
 
 	helpMsg_length				equ  $-helpMsg
 	errorParamMsg					DB	'Ошибка параметров коммандной строки', 10, 13
@@ -92,40 +92,41 @@ cursiveSymbol               DB 00000000b ; символ, составленный из единичек (его
 	tableBottom_length 	equ  $-tableBottom
 
 	; сообщения
-	installedMsg					DB  'Резидент загружен!$'
-	alreadyInstalledMsg		DB  'Резидент уже загружен$'
-	noMemMsg						  DB  'Недостаточно памяти$'
+	installedMsg				DB  'Резидент загружен!$'
+	alreadyInstalledMsg	         			DB  'Резидент уже загружен$'
+	noMemMsg					DB  'Недостаточно памяти$'
 	notInstalledMsg				DB  'Не удалось загрузить резидент$'
 
-	removedMsg					DB  'Резидент выгружен'
+	removedMsg				DB  'Резидент выгружен'
 	removedMsg_length		equ	$-removedMsg
 
-	noRemoveMsg					DB  'Не удалось выгрузить резидент'
-	noRemoveMsg_length	equ	$-noRemoveMsg
+	noRemoveMsg				DB  'Не удалось выгрузить резидент'
+	noRemoveMsg_length 		equ	$-noRemoveMsg
 
-	f1_txt						DB	'F4'
-	f2_txt						DB	'F5'
-	f3_txt						DB	'F6'
-	f4_txt						DB	'F7'
-	fx_length					equ	$-f4_txt
+	f1_txt					DB	'F1'
+	f2_txt					DB	'F2'
+	f3_txt					DB	'F3'
+	f4_txt					DB	'F4'
+	fx_length			equ	$-f4_txt
 
-	changeFx proc
-		push AX
-		push BX
-		push CX
-		push DX
-		push BP
-		push ES
-		xor BX, BX
+;@== процедура перерисовки клавиш f1-f4 ==
+changeFx proc 
+	push AX
+	push BX
+	push CX
+	push DX
+	push BP
+	push ES
+	xor BX, BX
 
-		mov AH, 03h
-		int 10h
-		push DX
+	mov AH, 03h
+	int 10h
+	push DX
 
-		push CS
-		pop ES
+	push CS
+	pop ES
 
-	_checkF4:
+	_checkF1:
 		lea BP, f1_txt
 		mov CX, fx_length
 		mov BH, 0
@@ -134,19 +135,19 @@ cursiveSymbol               DB 00000000b ; символ, составленный из единичек (его
 		mov AX, 1301h
 
 		cmp signaturePrintingEnabled, true
-		je _greenF4
+		je _greenF1
 
-		_redF4:
+		_redF1:
 			mov BL, 01001111b ; red
 			int 10h
-			jmp _checkF5
+			jmp _checkF2
 
-		_greenF4:
+		_greenF1:
 			lea BP, f1_txt
 			mov BL, 00101111b ; green
 			int 10h
 
-	_checkF5:
+	_checkF2:
 		lea BP, f2_txt
 		mov CX, fx_length
 		mov BH, 0
@@ -155,18 +156,18 @@ cursiveSymbol               DB 00000000b ; символ, составленный из единичек (его
 		mov AX, 1301h
 
 		cmp cursiveEnabled, true
-		je _greenF5
+		je _greenF2
 
-		_redF5:
+		_redF2:
 			mov BL, 01001111b ; red
 			int 10h
-			jmp _checkF6
+			jmp _checkF3
 
-		_greenF5:
+		_greenF2:
 			mov BL, 00101111b ; green
 			int 10h
 
-	_checkF6:
+	_checkF3:
 		lea BP, f3_txt
 		mov CX, fx_length
 		mov BH, 0
@@ -175,18 +176,18 @@ cursiveSymbol               DB 00000000b ; символ, составленный из единичек (его
 		mov AX, 1301h
 
 		cmp translateEnabled, true
-		je _greenF6
+		je _greenF3
 
-		_redF6:
+		_redF3:
 			mov BL, 01001111b ; red
 			int 10h
-			jmp _checkF7
+			jmp _checkF4
 
-		_greenF6:
+		_greenF3:
 			mov BL, 00101111b ; green
 			int 10h
 
-	_checkF7:
+	_checkF4:
 		lea BP, f4_txt
 		mov CX, fx_length
 		mov BH, 0
@@ -195,14 +196,14 @@ cursiveSymbol               DB 00000000b ; символ, составленный из единичек (его
 		mov AX, 1301h
 
 		cmp ignoreEnabled, true
-		je _greenF7
+		je _greenF4
 
-		_redF7:
+		_redF4:
 			mov BL, 01001111b ; red
 			int 10h
 			jmp _outFx
 
-		_greenF7:
+		_greenF4:
 			mov BL, 00101111b ; green
 			int 10h
 			
@@ -218,55 +219,53 @@ cursiveSymbol               DB 00000000b ; символ, составленный из единичек (его
 		pop BX
 		pop AX
 		ret
-	changeFx endp
+changeFx endp
 
-    ;новый обработчик
-    new_int9h proc far
-		; сохраняем значения всех, изменяемых регистров в стэке
-		push SI
-		push AX
-		push BX
-		push CX
-		push DX
-		push ES
-		push DS
-		; синхронизируем CS и DS
-		push CS
-		pop	DS
+;новый обработчик
+new_int9h proc far
+	; сохраняем значения всех, изменяемых регистров в стэке
+	push SI
+	push AX
+	push BX
+	push CX
+	push DX
+	push ES
+	push DS
+	
+	; синхронизируем CS и DS
+	push CS
+	pop	DS
 
-		mov	AX, 40h ; 40h-сегмент,где хранятся флаги сост-я клавиатуры, кольц. буфер ввода
-		mov	ES, AX
-		in	AL, 60h	; записываем в AL скан-код нажатой клавиши
-
-		
-
-		
-		;@ далее - код для всех вариантов
-
-		;проверка F4-F7
-		_test_Fx:
+	mov	AX, 40h ; 40h-сегмент,где хранятся флаги сост-я клавиатуры, кольц. буфер ввода
+	mov	ES, AX
+	in	AL, 60h	; записываем в AL скан-код нажатой клавиши
+	
+	
+	;@ далее - код для всех вариантов
+	;проверка F1-F4
+	_test_Fx:
 		sub AL, 58 ; в AL теперь номер функциональной клавиши
-		_F4:
-			cmp AL, 4 ; F4
-			jne _F5
+		_F1:
+			cmp AL, 1 ; F1
+			jne _F2
 			not signaturePrintingEnabled
 			call changeFx
 			jmp _translate_or_ignore
-		_F5:
-			cmp AL, 5 ; F5
-			jne _F6
+		_F2:
+			cmp AL, 2 ; F2
+			jne _F3
 			not cursiveEnabled
 			call changeFx
 			call setCursive ; перевод символа в курсив и обратно в зависимости от флага cursiveEnabled
 			jmp _translate_or_ignore
-		_F6:
-			cmp AL, 6 ; F6
-			jne _F7
+		_F3:
+			cmp AL, 3 ; F3
+			jne _F4
 			not translateEnabled
 			call changeFx
 			jmp _translate_or_ignore
-		_F7:
-			cmp AL, 7 ; F7
+		_F4:
+			cmp AL, 4 ; F4
 			jne _translate_or_ignore
 			not ignoreEnabled
 			call changeFx
@@ -274,17 +273,16 @@ cursiveSymbol               DB 00000000b ; символ, составленный из единичек (его
 
 		;игнорирование и перевод
 		_translate_or_ignore:
-
-		pushf
-		call dword ptr CS:[old_int9hOffset] ; вызываем стандартный обработчик прерывания
-		mov	AX, 40h 	; 40h-сегмент,где хранятся флаги сост-я клавы,кольц. буфер ввода
-		mov	ES, AX
-		mov	BX, ES:[1Ch]	; адрес хвоста
-		dec	BX	; сместимся назад к последнему
-		dec	BX	; введённому символу
-		cmp	BX, 1Eh	; не вышли ли мы за пределы буфера?
-		jae	_go
-		mov	BX, 3Ch	; хвост вышел за пределы буфера, значит последний введённый символ
+			pushf
+			call dword ptr CS:[old_int9hOffset] ; вызываем стандартный обработчик прерывания
+			mov	AX, 40h 	; 40h-сегмент,где хранятся флаги сост-я клавы,кольц. буфер ввода
+			mov	ES, AX
+			mov	BX, ES:[1Ch]	; адрес хвоста
+			dec	BX	; сместимся назад к последнему
+			dec	BX	; введённому символу
+			cmp	BX, 1Eh	; не вышли ли мы за пределы буфера?
+			jae	_go
+			mov	BX, 3Ch	; хвост вышел за пределы буфера, значит последний введённый символ
 				    ; находится	в конце буфера
 
 	_go:
@@ -311,14 +309,14 @@ cursiveSymbol               DB 00000000b ; символ, составленный из единичек (его
 		;@ если по варианту нужно не блокировать ввод символа,
 		;@ а заменять одни символы другими,
 		;@ замените строку выше строкой
-		;mov ES:[BX], AX
+		mov ES:[BX], '*'
 		;@ на месте AX может быть '*' для замены всех символов множества ignoredChars на звёздочки
 		;@ или, для перевода одних символов в другие - завести массив
 		;@ replaceWith DB '...', где перечислить символы, на которые пойдёт замена
 		;@ и раскомментировать строки ниже:
-		  xor AX, AX
-		  mov AL, replaceWith[SI]
-		  mov ES:[1Ch], BX	; блокировка ввода символа
+			;xor AX, AX
+		  	;mov AL, replaceWith[SI]
+		  	;mov ES:[1Ch], BX	;блокировка ввода 
 		jmp _quit
 
 	_check_translate:
@@ -365,7 +363,7 @@ new_int1Ch proc far
 	pushf
 	call dword ptr CS:[old_int1ChOffset]
 
-	cmp signaturePrintingEnabled, true ; если нажата управляющая клавиша (в данном случае F6)
+	cmp signaturePrintingEnabled, true ; если нажата управляющая клавиша (в данном случае F2)
 	jne _notToPrint
 
 		cmp counter, printDelay*1000/55 + 1 ; если кол-во "тактов" эквивалентно %printDelay% секундам
@@ -407,8 +405,8 @@ _2Fh_std:
 	jmp	dword ptr CS:[old_int2FhOffset]	;вызов старого обработчика
 
 _already_installed:
-		mov	AH, 'i'	;вернём 'i', если резидент загружен	в память
-		iret
+	mov	AH, 'i'	;вернём 'i', если резидент загружен	в память
+	iret
 
 _uninstall:
 	push	DS
@@ -424,17 +422,17 @@ _uninstall:
 
 	mov	AX, 2509h
 	mov DX, ES:old_int9hOffset         ; возвращаем вектор прерывания
-    mov DS, ES:old_int9hSegment        ; на место
+    	mov DS, ES:old_int9hSegment        ; на место
 	int	21h
 
 	mov	AX, 251Ch
 	mov DX, ES:old_int1ChOffset         ; возвращаем вектор прерывания
-    mov DS, ES:old_int1ChSegment        ; на место
+    	mov DS, ES:old_int1ChSegment        ; на место
 	int	21h
 
 	mov	AX, 252Fh
 	mov DX, ES:old_int2FhOffset         ; возвращаем вектор прерывания
-    mov DS, ES:old_int2FhSegment        ; на место
+    	mov DS, ES:old_int2FhSegment        ; на место
 	int	21h
 
 	mov	ES, CS:2Ch	; загрузим в ES адрес окружения
@@ -535,9 +533,9 @@ printSignature proc
 		;вывод 'верхушки' таблицы
 		push DX
 		lea BP, tableTop				;помещаем в BP указатель на выводимую строку
-		mov CX, tableTop_length		;в CX - длина строки
+		mov CX, tableTop_length			;в CX - длина строки
 		mov BL, 0111b 				;цвет выводимого текста ref: http://en.wikipedia.org/wiki/BIOS_color_attributes
-		mov AX, 1301h					;AH=13h - номер ф-ии, AL=01h - курсор перемещается при выводе каждого из символов строки
+		mov AX, 1301h				;AH=13h - номер ф-ии, AL=01h - курсор перемещается при выводе каждого из символов строки
 		int 10h
 		pop DX
 		inc DH
@@ -619,7 +617,7 @@ setCursive proc
 	mov CL, charToCursiveIndex
 _shifTtable:
 	; мы получаем в BP таблицу всех символов. адрес указывает на символ 0
-	; поэтому нуэно совершить сдвиг 16*X - где X - код символа
+	; поэтому нужно совершить сдвиг 16*X - где X - код символа
 	add BP, 16
 	loop _shiftTable
 
@@ -751,9 +749,9 @@ _initTSR: ; старт резидента
 	int 10h
 
 
-    call commandParamsParser
+    	call commandParamsParser
 	mov AX,3509h                    ; получить в ES:BX вектор 09
-    int 21h                         ; прерывания
+    	int 21h                         ; прерывания
 
 	;@ === Удаление резидента из памяти ===
 	;@ Если по варианту необходимо выгружать резидент по повторному запуску приложений,
@@ -793,25 +791,24 @@ _initTSR: ; старт резидента
 		jmp _exit
 
 	_tmp:
-	push ES
-    mov AX, DS:[2Ch]                ; psp
-    mov ES, AX
-    mov AH, 49h                     ; хватит памяти чтоб остаться
-    int 21h                         ; резидентом?
-    pop ES
-    jc _notMem                      ; не хватило - выходим
+		push ES
+    		mov AX, DS:[2Ch]                ; psp
+    		mov ES, AX
+    		mov AH, 49h                     ; хватит памяти чтоб остаться
+    		int 21h                         ; резидентом?
+    		pop ES
+    		jc _notMem                      ; не хватило - выходим
 
 	;== int 09h ==;
-
 	mov	word ptr CS:old_int9hOffset, BX
 	mov	word ptr CS:old_int9hSegment, ES
-    mov AX, 2509h                   ; установим вектор на 09
-    mov DX, offset new_int9h            ; прерывание
-    int 21h
+    	mov AX, 2509h                   ; установим вектор на 09
+    	mov DX, offset new_int9h        ; прерывание
+    	int 21h
 
 	;== int 1Ch ==;
 	mov AX,351Ch                    ; получить в ES:BX вектор 1C
-    int 21h                         ; прерывания
+    	int 21h                         ; прерывания
 	mov	word ptr CS:old_int1ChOffset, BX
 	mov	word ptr CS:old_int1ChSegment, ES
 	mov AX, 251Ch                   ; установим вектор на 1C
@@ -820,7 +817,7 @@ _initTSR: ; старт резидента
 
 	;== int 2Fh ==;
 	mov AX,352Fh                    ; получить в ES:BX вектор 1C
-    int 21h                         ; прерывания
+    	int 21h                         ; прерывания
 	mov	word ptr CS:old_int2FhOffset, BX
 	mov	word ptr CS:old_int2FhSegment, ES
 	mov AX, 252Fh                   ; установим вектор на 2F
@@ -860,46 +857,41 @@ commandParamsParser proc
 	mov notLoadTSR, 0
 
 	mov SI, 80h   				;SI=смещение командной строки.
-	lodsb        					;Получим кол-во символов.
+	lodsb        				;Получим кол-во символов.
 	or AL, AL     				;Если 0 символов введено,
 	jz _exitHelp   				;то все в порядке.
 
 	_nextChar:
-
-	inc SI       					;Теперь SI указывает на первый символ строки.
-
-	cmp [SI], BYTE ptr 13
-	je _exitHelp
-
-
-		lodsw       				;Получаем два символа
-		cmp AX, '?/' 				;Это '/?' (данные расположены в обратном порядк, т.е. AL:AH вместо AH:AL)
-		je _question
-		;cmp AX, 'u/'
-		;je _finishTSR
-
+		inc SI       			;Теперь SI указывает на первый символ строки.
+		cmp [SI], BYTE ptr 13
+		je _exitHelp                            ; выход из процедуры
+		
+		lodsw       			;Получаем два символа
+		cmp AX, '?/' 			;Это '/?' (данные расположены в обратном порядк, т.е. AL:AH вместо AH:AL)
+		je _question                            ; Вывод справки
+		cmp AX, 'u/'
+		je _finishTSR                           ; Выгрузка резидента
 		;cmp AH, '/'
-		;je _errorParam
-
-		jmp _exitHelp
-
+		;je _errorParam                         ; Обработка ошибки
+		jmp _exitHelp   
+		
+          ;@ === Вывод справки ===
 	_question:
 		; вывод строки помощи
-			mov AH,03
-			int 10h
-			lea BP, helpMsg
-			mov CX, helpMsg_length
-			mov BL, 0111b
-			mov AX, 1301h
-			int 10h
+		mov AH,03
+		int 10h
+		lea BP, helpMsg
+		mov CX, helpMsg_length
+		mov BL, 0111b
+		mov AX, 1301h
+		int 10h
+		
 		; конец вывода строки помощи
 		not notLoadTSR	        ;флаг того, что необходимо не загружать резидент
 		jmp _nextChar
 
 	;@ === Удаление резидента из памяти ===
-	;@ Если по варианту необходимо выгружать резидент по параметру '/u' коммандной строки,
-	;@ нужно использовать следующий код, в остальных случаях необходимо закомменитровать
-	;@ этот код, кроме названия метки! (по желанию можно избавиться и от метки, но аккуратно просмотреть использование)
+	;@ Т.к. по варианту необходимо выгружать резидент по параметру '/u' коммандной строки.
 	_finishTSR:
 		not unloadTSR		      ;флаг того, что необходимо выгузить резидент
 		jmp _nextChar
@@ -908,16 +900,17 @@ commandParamsParser proc
 
 	_errorParam:
 		;вывод строки
-			mov AH,03
-			int 10h
-			lea BP, CS:errorParamMsg
-			mov CX, errorParamMsg_length
-			mov BL, 0111b
-			mov AX, 1301h
-			int 10h
-		;конец вывода строки
+		mov AH,03
+		int 10h
+		lea BP, CS:errorParamMsg
+		mov CX, errorParamMsg_length
+		mov BL, 0111b
+		mov AX, 1301h
+		int 10h
+		;конец вывода строки  
+		
 	_exitHelp:
-	ret
+		ret
 commandParamsParser endp
 
 code ends
