@@ -60,7 +60,8 @@ print:
     ; Преобразуем число в AH в двухзначное десятичное
     mov al, ah      ; число для вывода (0-15)
     xor ah, ah      ; очищаем AH
-    ;=======
+
+convertion:
     mov bl, 254
     mul bl
     
@@ -68,7 +69,8 @@ print:
     div bl
     push ax
     xor ah, ah
-    ;========
+
+int_print:
     mov bl, 10
     div bl          ; AL = частное, AH = остаток
     
@@ -80,7 +82,7 @@ print:
     je skip_tens
     call PRINT_NIBBLE
     
-skip_tens:
+int_skip_tens:
     ; Выводим единицы
     pop ax
     mov al, ah
@@ -89,6 +91,8 @@ skip_tens:
     ;===space
     mov al, ','
     call putch
+
+float_print:
     ;===floating
     pop ax
     mov al, ah
@@ -104,7 +108,7 @@ skip_tens:
     je skip_tens_1
     call PRINT_NIBBLE
     
-skip_tens_1:
+float_skip_tens:
     ; Выводим единицы
     pop ax
     mov al, ah
