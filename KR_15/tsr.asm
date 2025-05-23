@@ -6,7 +6,7 @@
 ;  tlink /t /x tsr.obj
 ;
 ;  МГТУ им. Н.Э. Баумана, ИУ5-43Б, 2025 г.
-;  Сорокин М. А.
+;  Никифоров А. Ю.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 code segment	'code'
@@ -18,11 +18,11 @@ code segment	'code'
 
 	; данные
 	replaceWith 			DB	''
-	ignoredChars                		DB  	'ЙЦУКЕНГШЩЗХЪФЫВАПРОЛДЖЭЯЧСМИТЬБЮйцукенгшщзхъфывапролджэячсмитьбю'
+	ignoredChars                		DB  	'ЙЦУКЕНГШЩЗХЪФЫВАПРОЛДЖЭЯЧСМИТЬБЮ'
 	ignoredLength 			equ	$-ignoredChars ; длина строки ignoredChars
 	ignoreEnabled 			DB	0	; флаг функции игнорирования ввода
-	translateFrom 			DB	'F<DUL'	; символы для замены (РСТУФ на англ. раскладке)
-	translateTo 			DB	'АБВГД'	; символы на которые будет идти замена'	; символы на которые будет идти замена
+	translateFrom 			DB	'}SM">Z'	; символы для замены (ЪЫЬЭЮЯ на англ. раскладке)
+	translateTo 			DB	'ЪЫЬЭЮЯ'	; символы на которые будет идти замена
 	translateLength			equ	$-translateTo	; длина строки trasnlateFrom
 	translateEnabled			DB	0	; флаг функции перевода
 
@@ -33,24 +33,24 @@ code segment	'code'
 	cursiveSymbol 	DB 00000000b ; символ, составленный из единичек (его курсивный вариант)
 			DB 00000000b
 			DB 00000000b
-			DB 11000011b
-			DB 11000011b
+			DB 00110011b
+			DB 01110011b
+			DB 01110111b
+			DB 01111011b
+			DB 11011011b
+			DB 11011011b
 			DB 11000110b
 			DB 11000110b
-			DB 01101100b
-			DB 00111100b
-			DB 00011000b
-			DB 00110000b
-			DB 01100000b
-			DB 11000000b
-			DB 00000000b
+			DB 11000110b
+			DB 11000110b
+			DB 00000000b       
 			DB 00000000b
 			DB 00000000b
 
 
 
 
-	charToCursiveIndex 		DB 'У' 		; символ для замены
+	charToCursiveIndex 		DB 'М' 		; символ для замены
 	savedSymbol 		DB 16 dup(0FFh)	; переменная для хранения старого символа
 
 	true 			equ	0FFh 	; константа истинности
@@ -64,23 +64,23 @@ code segment	'code'
 	unloadTSR						DB	0 ; 1 - выгрузить резидент
 	notLoadTSR					DB	0 ; 1 - не загружать
 	counter	  					DW	0
-	printDelay					equ	3 ; задержка перед выводом "подписи" в секундах
-	printPos						DW	1 ; положение подписи на экране. 0 - верх, 1 - центр, 2 - низ
+	printDelay					equ	7 ; задержка перед выводом "подписи" в секундах
+	printPos						DW	2 ; положение подписи на экране. 0 - верх, 1 - центр, 2 - низ
 
 	;@ заменить на собственные данные. формирование таблицы идет по строке большей длины (1я строка).
-	signatureLine1				DB	179, 'Сорокин Михаил                                    ', 179
+	signatureLine1				DB	179, 'Никифоров Артем                                   ', 179
 	Line1_length 					equ	$-signatureLine1
-	signatureLine2				DB	179, 'ИУ5-88                                            ', 179
+	signatureLine2				DB	179, 'ИУ5-43Б                                           ', 179
 	Line2_length 					equ	$-signatureLine2
-	signatureLine3				DB	179, 'Вариант #21                                       ', 179
+	signatureLine3				DB	179, 'Вариант #15                                       ', 179
 	Line3_length 					equ	$-signatureLine3
 	helpMsg DB '>tsr.com [/?] ', 10, 13
 					DB ' [/?] - вывод данной справки', 10, 13
 					DB ' [/u] - выгрузка резидента из памяти', 10, 13
-					DB '  F1  - вывод ФИО и группы по таймеру в центре экрана', 10, 13
-					DB '  F2  - включение и отключения курсивного вывода русского символа У', 10, 13
-					DB '  F3  - включение и отключение частичной русификации клавиатуры(F<DUL -> АБВГД)', 10, 13
-					DB '  F4  - включение и отключение режима замены русских букв символом - *', 10, 13
+					DB '  F3 - вывод ФИО и группы по таймеру внизу экрана', 10, 13
+					DB '  F4 - включение и отключения курсивного вывода русского символа М', 10, 13
+					DB '  F5 - включение и отключение частичной русификации клавиатуры(}SM">Z -> ЪЫЬЭЮЯ)', 10, 13
+					DB '  F6 - включение и отключение режима ограничения ввода прописных русских букв', 10, 13
 
 	helpMsg_length				equ  $-helpMsg
 	errorParamMsg					DB	'Ошибка параметров коммандной строки', 10, 13
@@ -103,13 +103,13 @@ code segment	'code'
 	noRemoveMsg				DB  'Не удалось выгрузить резидент'
 	noRemoveMsg_length 		equ	$-noRemoveMsg
 
-	f1_txt					DB	'F1'
-	f2_txt					DB	'F2'
 	f3_txt					DB	'F3'
 	f4_txt					DB	'F4'
-	fx_length			equ	$-f4_txt
+	f5_txt					DB	'F5'
+	f6_txt					DB	'F6'
+	fx_length			equ	$-f6_txt
 
-;@== процедура перерисовки клавиш f1-f4 ==
+;@== процедура перерисовки клавиш f3-f6 ==
 changeFx proc 
 	push AX
 	push BX
@@ -126,8 +126,8 @@ changeFx proc
 	push CS
 	pop ES
 
-	_checkF1:
-		lea BP, f1_txt
+	_checkF3:
+		lea BP, f3_txt
 		mov CX, fx_length
 		mov BH, 0
 		mov DH, 0
@@ -135,47 +135,6 @@ changeFx proc
 		mov AX, 1301h
 
 		cmp signaturePrintingEnabled, true
-		je _greenF1
-
-		_redF1:
-			mov BL, 01001111b ; red
-			int 10h
-			jmp _checkF2
-
-		_greenF1:
-			lea BP, f1_txt
-			mov BL, 00101111b ; green
-			int 10h
-
-	_checkF2:
-		lea BP, f2_txt
-		mov CX, fx_length
-		mov BH, 0
-		mov DH, 1
-		mov DL, 78
-		mov AX, 1301h
-
-		cmp cursiveEnabled, true
-		je _greenF2
-
-		_redF2:
-			mov BL, 01001111b ; red
-			int 10h
-			jmp _checkF3
-
-		_greenF2:
-			mov BL, 00101111b ; green
-			int 10h
-
-	_checkF3:
-		lea BP, f3_txt
-		mov CX, fx_length
-		mov BH, 0
-		mov DH, 2
-		mov DL, 78
-		mov AX, 1301h
-
-		cmp translateEnabled, true
 		je _greenF3
 
 		_redF3:
@@ -184,6 +143,7 @@ changeFx proc
 			jmp _checkF4
 
 		_greenF3:
+			lea BP, f3_txt
 			mov BL, 00101111b ; green
 			int 10h
 
@@ -191,19 +151,59 @@ changeFx proc
 		lea BP, f4_txt
 		mov CX, fx_length
 		mov BH, 0
-		mov DH, 3
+		mov DH, 1
 		mov DL, 78
 		mov AX, 1301h
 
-		cmp ignoreEnabled, true
+		cmp cursiveEnabled, true
 		je _greenF4
 
 		_redF4:
 			mov BL, 01001111b ; red
 			int 10h
-			jmp _outFx
+			jmp _checkF5
 
 		_greenF4:
+			mov BL, 00101111b ; green
+			int 10h
+
+	_checkF5:
+		lea BP, f5_txt
+		mov CX, fx_length
+		mov BH, 0
+		mov DH, 2
+		mov DL, 78
+		mov AX, 1301h
+
+		cmp translateEnabled, true
+		je _greenF5
+
+		_redF5:
+			mov BL, 01001111b ; red
+			int 10h
+			jmp _checkF6
+
+		_greenF5:
+			mov BL, 00101111b ; green
+			int 10h
+
+	_checkF6:
+		lea BP, f6_txt
+		mov CX, fx_length
+		mov BH, 0
+		mov DH, 3
+		mov DL, 78
+		mov AX, 1301h
+
+		cmp ignoreEnabled, true
+		je _greenF6
+
+		_redF6:
+			mov BL, 01001111b ; red
+			int 10h
+			jmp _outFx
+
+		_greenF6:
 			mov BL, 00101111b ; green
 			int 10h
 			
@@ -242,30 +242,30 @@ new_int9h proc far
 	
 	
 	;@ далее - код для всех вариантов
-	;проверка F1-F4
+	;проверка F3-F6
 	_test_Fx:
 		sub AL, 58 ; в AL теперь номер функциональной клавиши
-		_F1:
-			cmp AL, 1 ; F1
-			jne _F2
-			not signaturePrintingEnabled
-			call changeFx
-			jmp _translate_or_ignore
-		_F2:
-			cmp AL, 2 ; F2
-			jne _F3
-			not cursiveEnabled
-			call changeFx
-			call setCursive ; перевод символа в курсив и обратно в зависимости от флага cursiveEnabled
-			jmp _translate_or_ignore
 		_F3:
 			cmp AL, 3 ; F3
 			jne _F4
-			not translateEnabled
+			not signaturePrintingEnabled
 			call changeFx
 			jmp _translate_or_ignore
 		_F4:
 			cmp AL, 4 ; F4
+			jne _F5
+			not cursiveEnabled
+			call changeFx
+			call setCursive ; перевод символа в курсив и обратно в зависимости от флага cursiveEnabled
+			jmp _translate_or_ignore
+		_F5:
+			cmp AL, 5 ; F5
+			jne _F6
+			not translateEnabled
+			call changeFx
+			jmp _translate_or_ignore
+		_F6:
+			cmp AL, 6 ; F6
 			jne _translate_or_ignore
 			not ignoreEnabled
 			call changeFx
@@ -309,7 +309,7 @@ new_int9h proc far
 		;@ если по варианту нужно не блокировать ввод символа,
 		;@ а заменять одни символы другими,
 		;@ замените строку выше строкой
-		mov ES:[BX], '*'
+		mov ES:[BX], ''
 		;@ на месте AX может быть '*' для замены всех символов множества ignoredChars на звёздочки
 		;@ или, для перевода одних символов в другие - завести массив
 		;@ replaceWith DB '...', где перечислить символы, на которые пойдёт замена

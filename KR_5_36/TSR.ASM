@@ -1,115 +1,111 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; tsr.asm
-;
 ; Сборка:
-;  tasm.exe /l tsr.asm
+;  tasm /l tsr.asm
 ;  tlink /t /x tsr.obj
 ;
+;
+; Автор:
 ;  МГТУ им. Н.Э. Баумана, ИУ5-43Б, 2025 г.
-;  Сорокин М. А.
+;  Дунаев Д. В.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 code segment	'code'
 	assume	CS:code, DS:code
 	org	100h
 	_start:
-
+	
 	jmp _initTSR ; на начало программы
-
+	
 	; данные
-	replaceWith 			DB	''
-	ignoredChars                		DB  	'ЙЦУКЕНГШЩЗХЪФЫВАПРОЛДЖЭЯЧСМИТЬБЮйцукенгшщзхъфывапролджэячсмитьбю'
-	ignoredLength 			equ	$-ignoredChars ; длина строки ignoredChars
-	ignoreEnabled 			DB	0	; флаг функции игнорирования ввода
-	translateFrom 			DB	'F<DUL'	; символы для замены (РСТУФ на англ. раскладке)
-	translateTo 			DB	'АБВГД'	; символы на которые будет идти замена'	; символы на которые будет идти замена
-	translateLength			equ	$-translateTo	; длина строки trasnlateFrom
-	translateEnabled			DB	0	; флаг функции перевода
+	ignoredChars 				DB	'йцукенгшщзхъфывапролджэячсмитьбюЙЦУКЕНГШЩЗХЪФЫВАПРОЛДЖЭЯЧСМИТЬБЮ'	;@ список игнорируемых символов
+	ignoredLength 				equ	$-ignoredChars		          ; длина строки ignoredChars
+	ignoreEnabled 				DB	0			          ; флаг функции игнорирования ввода
+	translateFrom 				DB	'T:PBR'			          ;@ символы для замены (ЕЖЗИК на англ. раскладке)
+	translateTo 				DB	'ЕЖЗИК'			          ;@ символы на которые будет идти замена
+	translateLength				equ	$-translateTo		          ; длина строки trasnlateFrom
+	translateEnabled				DB	0			          ; флаг функции перевода
+	
+	signaturePrintingEnabled 	         		DB	0			          ; флаг функции вывода информации об авторе
+	cursiveEnabled 				DB	0			          ; флаг перевода символа в курсив
 
-	signaturePrintingEnabled 		DB	0	; флаг функции вывода информации об авторе
-	cursiveEnabled 			DB	0	; флаг перевода символа в курсив
-
-
-	cursiveSymbol 	DB 00000000b ; символ, составленный из единичек (его курсивный вариант)
-			DB 00000000b
-			DB 00000000b
-			DB 11000011b
-			DB 11000011b
-			DB 11000110b
-			DB 11000110b
-			DB 01101100b
-			DB 00111100b
-			DB 00011000b
-			DB 00110000b
-			DB 01100000b
-			DB 11000000b
-			DB 00000000b
-			DB 00000000b
-			DB 00000000b
-
-
-
-
-	charToCursiveIndex 		DB 'У' 		; символ для замены
-	savedSymbol 		DB 16 dup(0FFh)	; переменная для хранения старого символа
-
-	true 			equ	0FFh 	; константа истинности
-	old_int9hOffset 		DW	?	; адрес старого обработчика int 9h
-	old_int9hSegment 		DW	?	; сегмент старого обработчика int 9h
-	old_int1ChOffset 		DW	?	; адрес старого обработчика int 1Ch
-	old_int1ChSegment 		DW	?	; сегмент старого обработчика int 1Ch
-	old_int2FhOffset 		DW	?	; адрес старого обработчика int 2Fh
-	old_int2FhSegment 		DW	?	; сегмент старого обработчика int 2Fh
-
-	unloadTSR						DB	0 ; 1 - выгрузить резидент
-	notLoadTSR					DB	0 ; 1 - не загружать
-	counter	  					DW	0
-	printDelay					equ	3 ; задержка перед выводом "подписи" в секундах
-	printPos						DW	1 ; положение подписи на экране. 0 - верх, 1 - центр, 2 - низ
-
-	;@ заменить на собственные данные. формирование таблицы идет по строке большей длины (1я строка).
-	signatureLine1				DB	179, 'Сорокин Михаил                                    ', 179
-	Line1_length 					equ	$-signatureLine1
-	signatureLine2				DB	179, 'ИУ5-88                                            ', 179
+	cursiveSymbol 				DB 00000000b			          ;@ символ, составленный из единичек (его курсивный вариант)
+						DB 00000000b
+						DB 00000000b
+						DB 00111110b
+						DB 00000111b
+						DB 00000011b
+						DB 00000110b
+						DB 00000110b
+						DB 00011100b
+						DB 00000110b
+						DB 00000110b
+						DB 00000110b
+						DB 11111100b
+						DB 00000000b
+						DB 00000000b
+						DB 00000000b
+	
+	charToCursiveIndex 				DB 'З'					;@ символ для замены
+	savedSymbol 				DB 16 dup(0FFh)				; переменная для хранения старого символа
+	
+	true 					equ	0FFh				; константа истинности
+	old_int9hOffset 				DW	?				; адрес старого обработчика int 9h
+	old_int9hSegment 				DW	?		    		; сегмент старого обработчика int 9h
+	old_int1ChOffset 				DW	?				; адрес старого обработчика int 1Ch
+	old_int1ChSegment 				DW	?				; сегмент старого обработчика int 1Ch
+	old_int2FhOffset 				DW	?				; адрес старого обработчика int 2Fh
+	old_int2FhSegment 				DW	?				; сегмент старого обработчика int 2Fh
+	
+	unloadTSR					DB	0 				; 1 - выгрузить резидент
+	notLoadTSR				DB	0				; 1 - не загружать
+	counter	  				DW	0
+	printDelay				equ	5 				;@ задержка перед выводом "подписи" в секундах
+	printPos					DW	0 				;@ положение подписи на экране. 0 - верх, 1 - центр, 2 - низ
+	
+	;@ формирование таблицы идет по строке большей длины (1я строка).
+	signatureLine1				DB	179, 'Дунаев Дениc                                       ', 179
+	Line1_length 					equ	$-signatureLine1                                 
+	signatureLine2				DB	179, 'ИУ5-46Б                                            ', 179
 	Line2_length 					equ	$-signatureLine2
-	signatureLine3				DB	179, 'Вариант #21                                       ', 179
+	signatureLine3				DB	179, 'Вариант #5                                         ', 179
 	Line3_length 					equ	$-signatureLine3
-	helpMsg DB '>tsr.com [/?] ', 10, 13
-					DB ' [/?] - вывод данной справки', 10, 13
-					DB ' [/u] - выгрузка резидента из памяти', 10, 13
-					DB '  F1  - вывод ФИО и группы по таймеру в центре экрана', 10, 13
-					DB '  F2  - включение и отключения курсивного вывода русского символа У', 10, 13
-					DB '  F3  - включение и отключение частичной русификации клавиатуры(F<DUL -> АБВГД)', 10, 13
-					DB '  F4  - включение и отключение режима замены русских букв символом - *', 10, 13
-
-	helpMsg_length				equ  $-helpMsg
-	errorParamMsg					DB	'Ошибка параметров коммандной строки', 10, 13
-	errorParamMsg_length	equ	$-errorParamMsg
-
-	tableTop						DB	218, Line1_length-2 dup (196), 191
-	tableTop_length 		equ	$-tableTop
-	tableBottom					DB	192, Line1_length-2 dup (196), 217
-	tableBottom_length 	equ  $-tableBottom
-
-	; сообщения
+	helpMsg DB '>tsr.com [/?] [/u]', 10, 13
+			DB ' [/?] - вывод данной справки', 10, 13
+			DB '  unloader.com - выгрузка резидента из памяти по ключу', 10, 13
+			DB '  F8  - вывод ФИО и группы по таймеру вверху экрана', 10, 13
+			DB '  F9  - включение и отключения курсивного вывода русской буквы З', 10, 13
+			DB '  F1  - включение и отключение частичной русификации клавиатуры(T:PBR -> ЕЖЗИК)', 10, 13
+			DB '  F2  - включение и отключение режима блокировки ввода русских букв', 10, 13
+			
+	helpMsg_length				equ  	$-helpMsg
+	errorParamMsg				DB	'Ошибка параметров коммандной строки', 10, 13
+	errorParamMsg_length			equ	$-errorParamMsg
+	
+	tableTop					DB	218, Line1_length-2 dup (196), 191
+	tableTop_length 				equ	$-tableTop
+	tableBottom				DB	192, Line1_length-2 dup (196), 217
+	tableBottom_length 				equ  	$-tableBottom
+	
+	; сообщения		
 	installedMsg				DB  'Резидент загружен!$'
-	alreadyInstalledMsg	         			DB  'Резидент уже загружен$'
+	alreadyInstalledMsg				DB  'Резидент уже загружен$'
 	noMemMsg					DB  'Недостаточно памяти$'
 	notInstalledMsg				DB  'Не удалось загрузить резидент$'
-
+	
 	removedMsg				DB  'Резидент выгружен'
-	removedMsg_length		equ	$-removedMsg
-
+	removedMsg_length				equ	$-removedMsg
+	
 	noRemoveMsg				DB  'Не удалось выгрузить резидент'
-	noRemoveMsg_length 		equ	$-noRemoveMsg
-
+	noRemoveMsg_length				equ	$-noRemoveMsg
+	
+	f8_txt					DB	'F8'
+	f9_txt					DB	'F9'
 	f1_txt					DB	'F1'
 	f2_txt					DB	'F2'
-	f3_txt					DB	'F3'
-	f4_txt					DB	'F4'
-	fx_length			equ	$-f4_txt
-
-;@== процедура перерисовки клавиш f1-f4 ==
+	fx_length					equ	$-f2_txt
+	
+;@== процедура перерисовки клавиш f8-f9 и f1-f2 ==
 changeFx proc 
 	push AX
 	push BX
@@ -126,8 +122,8 @@ changeFx proc
 	push CS
 	pop ES
 
-	_checkF1:
-		lea BP, f1_txt
+	_checkF8:
+		lea BP, f8_txt
 		mov CX, fx_length
 		mov BH, 0
 		mov DH, 0
@@ -135,6 +131,47 @@ changeFx proc
 		mov AX, 1301h
 
 		cmp signaturePrintingEnabled, true
+		je _greenF8
+
+		_redF8:
+			mov BL, 01001111b ; red
+			int 10h
+			jmp _checkF9
+
+		_greenF8:
+			lea BP, f8_txt
+			mov BL, 00101111b ; green
+			int 10h
+
+	_checkF9:
+		lea BP, f9_txt
+		mov CX, fx_length
+		mov BH, 0
+		mov DH, 1
+		mov DL, 78
+		mov AX, 1301h
+
+		cmp cursiveEnabled, true
+		je _greenF9
+
+		_redF9:
+			mov BL, 01001111b ; red
+			int 10h
+			jmp _checkF1
+
+		_greenF9:
+			mov BL, 00101111b ; green
+			int 10h
+
+	_checkF1:
+		lea BP, f1_txt
+		mov CX, fx_length
+		mov BH, 0
+		mov DH, 2
+		mov DL, 78
+		mov AX, 1301h
+
+		cmp translateEnabled, true
 		je _greenF1
 
 		_redF1:
@@ -143,7 +180,6 @@ changeFx proc
 			jmp _checkF2
 
 		_greenF1:
-			lea BP, f1_txt
 			mov BL, 00101111b ; green
 			int 10h
 
@@ -151,59 +187,19 @@ changeFx proc
 		lea BP, f2_txt
 		mov CX, fx_length
 		mov BH, 0
-		mov DH, 1
-		mov DL, 78
-		mov AX, 1301h
-
-		cmp cursiveEnabled, true
-		je _greenF2
-
-		_redF2:
-			mov BL, 01001111b ; red
-			int 10h
-			jmp _checkF3
-
-		_greenF2:
-			mov BL, 00101111b ; green
-			int 10h
-
-	_checkF3:
-		lea BP, f3_txt
-		mov CX, fx_length
-		mov BH, 0
-		mov DH, 2
-		mov DL, 78
-		mov AX, 1301h
-
-		cmp translateEnabled, true
-		je _greenF3
-
-		_redF3:
-			mov BL, 01001111b ; red
-			int 10h
-			jmp _checkF4
-
-		_greenF3:
-			mov BL, 00101111b ; green
-			int 10h
-
-	_checkF4:
-		lea BP, f4_txt
-		mov CX, fx_length
-		mov BH, 0
 		mov DH, 3
 		mov DL, 78
 		mov AX, 1301h
 
 		cmp ignoreEnabled, true
-		je _greenF4
+		je _greenF2
 
-		_redF4:
+		_redF2:
 			mov BL, 01001111b ; red
 			int 10h
 			jmp _outFx
 
-		_greenF4:
+		_greenF2:
 			mov BL, 00101111b ; green
 			int 10h
 			
@@ -242,30 +238,30 @@ new_int9h proc far
 	
 	
 	;@ далее - код для всех вариантов
-	;проверка F1-F4
+	;проверка F1-F2 U F8-F9
 	_test_Fx:
 		sub AL, 58 ; в AL теперь номер функциональной клавиши
-		_F1:
-			cmp AL, 1 ; F1
-			jne _F2
+		_F8:
+			cmp AL, 8 ; F8
+			jne _F9
 			not signaturePrintingEnabled
 			call changeFx
 			jmp _translate_or_ignore
-		_F2:
-			cmp AL, 2 ; F2
-			jne _F3
+		_F9:
+			cmp AL, 9 ; F9
+			jne _F1
 			not cursiveEnabled
 			call changeFx
 			call setCursive ; перевод символа в курсив и обратно в зависимости от флага cursiveEnabled
 			jmp _translate_or_ignore
-		_F3:
-			cmp AL, 3 ; F3
-			jne _F4
+		_F1:
+			cmp AL, 1 ; F1
+			jne _F2
 			not translateEnabled
 			call changeFx
 			jmp _translate_or_ignore
-		_F4:
-			cmp AL, 4 ; F4
+		_F2:
+			cmp AL, 2 ; F2
 			jne _translate_or_ignore
 			not ignoreEnabled
 			call changeFx
@@ -309,7 +305,8 @@ new_int9h proc far
 		;@ если по варианту нужно не блокировать ввод символа,
 		;@ а заменять одни символы другими,
 		;@ замените строку выше строкой
-		mov ES:[BX], '*'
+		mov byte ptr ES:[BX], 0
+		;mov ES:[BX], ''
 		;@ на месте AX может быть '*' для замены всех символов множества ignoredChars на звёздочки
 		;@ или, для перевода одних символов в другие - завести массив
 		;@ replaceWith DB '...', где перечислить символы, на которые пойдёт замена
@@ -343,12 +340,12 @@ new_int9h proc far
 
 	_quit:
 		; восстанавливаем все регистры
-		pop	DS
-		pop	ES
+		pop DS
+		pop ES
 		pop DX
 		pop CX
-		pop	BX
-		pop	AX
+		pop BX
+		pop AX
 		pop SI
 		iret
 new_int9h endp
@@ -477,8 +474,6 @@ _2Fh_exit:
 new_int2Fh endp
 
 ;=== Процедура вывода подписи (ФИО, группа)
-;=== Настраивается значениями переменных в начале исходника
-;===
 printSignature proc
 	push AX
 	push DX
@@ -869,8 +864,8 @@ commandParamsParser proc
 		lodsw       			;Получаем два символа
 		cmp AX, '?/' 			;Это '/?' (данные расположены в обратном порядк, т.е. AL:AH вместо AH:AL)
 		je _question                            ; Вывод справки
-		cmp AX, 'u/'
-		je _finishTSR                           ; Выгрузка резидента
+		;cmp AX, 'u/'                           ; Не используется, т.к. выгрузка при помощи unloader.com
+		;je _finishTSR                           ; Выгрузка резидента
 		;cmp AH, '/'
 		;je _errorParam                         ; Обработка ошибки
 		jmp _exitHelp   

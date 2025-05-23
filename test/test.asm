@@ -1,139 +1,151 @@
-data segment
-    msg_prompt db 'Ç¢•§®‚• Á®·´Æ$'
-    msg_in_error db 'éË®°™†! Ç¢•§•≠ ≠•Ø‡†¢®´Ï≠Î© ·®¨¢Æ´! $'
-    msg_stat db 'ì·Ø•Â! Ç¢•§•≠Æ Á®·´Æ = $'
-    int_input dd 12
-    post db 0 ; ™Æ´®Á•·‚¢Æ Á®·•´ ØÆ·´• ß†ØÔ‚Æ©
-    flg db 0 ; 0 - int, 1 - float
-data ends
-
+.MODEL SMALL
 stack segment
-    ? db 200 DUP(0) ; dup - Æ§≠Æ‚®Ø≠Î• §†≠≠Î•
+        db 100h dup(?) 
 stack ends
 
-EXTERN print_float:PROC  
+data segment
+    input_msg db "Enter the number in a 16th SS: $"
+data ends
 
 code segment
-    assume ds:data, ss:stack, cs:code
+    assume cs:code, ds:data, ss:stack
 
-main proc
-menu:
+MAIN PROC
+    ; –ò–Ω–∏—Ü–∏–∞–ª–∏–∑–∞—Ü–∏—è —Å–µ–≥–º–µ–Ω—Ç–Ω—ã—Ö —Ä–µ–≥–∏—Å—Ç—Ä–æ–≤
+    mov ax, data
+    mov ds, ax
+
     call CLRSCR
-    mov dl, msg_prompt
-    call putmes
     call CLRF
-    push 0
 
-int_input:
-    call getchecho
-    cmp al, '0'
-    jl not_digit
-    cmp al, '9'
-    jg not_digit
-    ; proces
-    mov dh, al  ; Ø•‡•≠Æ· ¢ ¢•‡Â≠®© ØÆ§‡•£®·‚‡  
-    pop ax      ; ‚Æ, Á‚Æ Ø‡•¶§• ¢¢•§•≠Æ
-    sub dh, '0' ; Ø•‡•¢Æ§ ®ß ASCII ¢ Á®·´Æ
-    add ah, dh  ; ·„¨¨®‡Æ¢†≠®• ·‚†‡Æ£Æ ® ≠Æ¢Æ£Æ Á®·´† 
-    mov bl, 10  ; 
-    mul bl      ; „¨≠Æ¶•≠®• ‡•ß„´Ï‚†‚† ≠† 10
-    push ax     ; ·ÆÂ‡†≠•≠®• Ø‡Æ¨•¶„‚ÆÁ≠Æ£Æ ‡•ß„´Ï‚†‚†
+    ; –í—ã–≤–æ–¥ –ø—Ä–∏–≥–ª–∞—à–µ–Ω–∏—è
+    mov ah, 09h
+    lea dx, input_msg
+    int 21h
 
-not_digit:
-    cmp al, '.'
-    jne input_error
-    flg = 1
-    push 0
-    jmp fraction_input
+    ; –í–≤–æ–¥ —Å–∏–º–≤–æ–ª–∞
+    call GETCH      ; —Å–∏–º–≤–æ–ª –≤ AL
+    mov ah, al      ; —Å–æ—Ö—Ä–∞–Ω—è–µ–º –≤ AH
 
-input_error:
-    call CLRF
-    mov dl, msg_in_error
-    call putmes
-    jmp menu
-    
-fraction_input:
-    call getchecho
-    cmp al, '0'
-    jl input_error
-    cmp al, '9'
-    jg input_error
-    ; proces
-    mov dl, al  ; Ø•‡•≠Æ· ¢ ¢•‡Â≠®© ØÆ§‡•£®·‚‡  
-    pop ax      ; ‚Æ, Á‚Æ Ø‡•¶§• ¢¢•§•≠Æ
-    sub dl, '0' ; Ø•‡•¢Æ§ ®ß ASCII ¢ Á®·´Æ
-    add al, dl  ; ·„¨¨®‡Æ¢†≠®• ·‚†‡Æ£Æ ® ≠Æ¢Æ£Æ Á®·´† 
-    mov bl, 10  ; 
-    mul bl      ; „¨≠Æ¶•≠®• ‡•ß„´Ï‚†‚† ≠† 10
-    push ax     ; ·ÆÂ‡†≠•≠®• Ø‡Æ¨•¶„‚ÆÁ≠Æ£Æ ‡•ß„´Ï‚†‚†
+    ; –ü—Ä–æ–≤–µ—Ä–∫–∞ –¥–∏–∞–ø–∞–∑–æ–Ω–∞
+    cmp ah, '0'
+    jb error
+    cmp ah, '9'
+    jbe digit       ; –µ—Å–ª–∏ —Ü–∏—Ñ—Ä–∞ 0-9
+    cmp ah, 'A'
+    jb error
+    cmp ah, 'F'
+    jbe letter      ; –µ—Å–ª–∏ –±—É–∫–≤–∞ A-F
+    jmp error       ; –∏–Ω–∞—á–µ –æ—à–∏–±–∫–∞
 
-    ; process
-    cmp flg, 1
-    je fraction_proc
-int_proc:
-    mov ax, ax ; Æ°≠„´Ô•¨ ax
-    pop ax     ; ·Á®‚Î
-    mov bl, 5
-    mul bl
-    mul bl, 2
-    div bl
-    ; ...
-    call print
+digit:
+    sub ah, '0'     ; –ø—Ä–µ–æ–±—Ä–∞–∑—É–µ–º ASCII –≤ —á–∏—Å–ª–æ
+    jmp print
 
-fraction_proc:
-    mov ax, ax ; Æ°≠„´Ô•¨ ax
-    pop ax     ; ·Á®‚Î¢†•¨ §‡Æ°≠„Ó Á†·‚Ï
-    mov bl, 2
-    mul bl
-    mul bl, 5
-    div bl
-    
-    call int_proc
-    
+letter:
+    sub ah, 'A'     ; A -> 0, B -> 1, ..., F -> 5
+    add ah, 10      ; A -> 10, B -> 11, ..., F -> 15
+    jmp print
+
+error:
+    mov al, '?'     ; –≤—ã–≤–æ–¥ —Å–∏–º–≤–æ–ª–∞ –æ—à–∏–±–∫–∏
+    call PUTCH
+    jmp finish
+
 print:
-    call digitOut
+    ; –í—ã–≤–æ–¥ –∑–Ω–∞–∫–∞ —Ä–∞–≤–µ–Ω—Å—Ç–≤–∞
+    mov al, '='
+    call PUTCH
     
-end:
-    mov AH, 4Ch 
-    int 21h 
-main endp
+    ; –ü—Ä–µ–æ–±—Ä–∞–∑—É–µ–º —á–∏—Å–ª–æ –≤ AH –≤ –¥–≤—É—Ö–∑–Ω–∞—á–Ω–æ–µ –¥–µ—Å—è—Ç–∏—á–Ω–æ–µ
+    mov al, ah      ; —á–∏—Å–ª–æ –¥–ª—è –≤—ã–≤–æ–¥–∞ (0-15)
+    xor ah, ah      ; –æ—á–∏—â–∞–µ–º AH
+    ;=======
+    mov bl, 254
+    mul bl
+    
+    mov bl, 100
+    div bl
+    push ax
+    xor ah, ah
+    ;========
+    mov bl, 10
+    div bl          ; AL = —á–∞—Å—Ç–Ω–æ–µ, AH = –æ—Å—Ç–∞—Ç–æ–∫
+    
+    ; –°–æ—Ö—Ä–∞–Ω—è–µ–º –æ—Å—Ç–∞—Ç–æ–∫
+    push ax
+    
+    ; –í—ã–≤–æ–¥–∏–º –¥–µ—Å—è—Ç–∫–∏ (–µ—Å–ª–∏ –æ–Ω–∏ –µ—Å—Ç—å)
+    cmp al, 0
+    je skip_tens
+    call PRINT_NIBBLE
+    
+skip_tens:
+    ; –í—ã–≤–æ–¥–∏–º –µ–¥–∏–Ω–∏—Ü—ã
+    pop ax
+    mov al, ah
+    call PRINT_NIBBLE
 
-;---- Ç·ØÆ¨Æ£†‚•´Ï≠Î• Ø‡ÆÊ•§„‡Î ----
-digitOut proc
-while:
-    cmp ax, 9
-    ;j
+    ;===space
+    mov al, ','
     call putch
-    ret
-digitOut endp
+    ;===floating
+    pop ax
+    mov al, ah
+    xor ah, ah
+    mov bl, 10
+    div bl          ; AL = —á–∞—Å—Ç–Ω–æ–µ, AH = –æ—Å—Ç–∞—Ç–æ–∫
+    
+    ; –°–æ—Ö—Ä–∞–Ω—è–µ–º –æ—Å—Ç–∞—Ç–æ–∫
+    push ax
+    
+    ; –í—ã–≤–æ–¥–∏–º –¥–µ—Å—è—Ç–∫–∏ (–µ—Å–ª–∏ –æ–Ω–∏ –µ—Å—Ç—å)
+    cmp al, 0
+    je skip_tens_1
+    call PRINT_NIBBLE
+    
+skip_tens_1:
+    ; –í—ã–≤–æ–¥–∏–º –µ–¥–∏–Ω–∏—Ü—ã
+    pop ax
+    mov al, ah
+    call PRINT_NIBBLE
+    ;=======
+    ; –ü–µ—Ä–µ–≤–æ–¥–∏–º —Å—Ç—Ä–æ–∫—É
+    call CLRF
+finish:
+    mov ax, 4C00h
+    int 21h
+MAIN ENDP
 
-putch proc
-    mov AH, 02h ; ®´® AL
+; –û—Å—Ç–∞–ª—å–Ω—ã–µ –ø—Ä–æ—Ü–µ–¥—É—Ä—ã –æ—Å—Ç–∞—é—Ç—Å—è –±–µ–∑ –∏–∑–º–µ–Ω–µ–Ω–∏–π
+PUTCH proc near
+    push ax
+    push dx
+
+    mov ah, 2h
+    mov dl, al
+    int 21h
+    
+    pop dx
+    pop ax
+    ret
+PUTCH endp
+
+GETCH proc near
+    mov AH, 01h
     int 21h
     ret
-putch endp
+GETCH ENDP
 
-PUTMES PROC ; Ø‡ÆÊ•§„‡† ¢Î¢Æ§† ¨†··®¢†
-    mov AH, 09h 
-    int 21h 
-    ret 
-PUTMES ENDP
+CLRF proc near
+    mov al, 13
+    call PUTCH
+    mov al, 10
+    call PUTCH
+    ret
+CLRF endp
 
-GETCHECHO PROC 
-    mov AH, 01h 
-    int 21h 
-    ret 
-GETCHECHO ENDP 
-
-CLRF PROC 
-    mov DL, 0Ah 
-    call PUTCH 
-    mov DL, 0Dh 
-    call PUTCH 
-    ret 
-CLRF ENDP 
-
-CLRSCR proc near ; Ø‡ÆÊ•§„‡† ÆÁ®·‚™® Ì™‡†≠†
+CLRSCR proc near
     mov ax, 0600h
     mov bh, 07h
     mov cx, 0000h
@@ -141,7 +153,20 @@ CLRSCR proc near ; Ø‡ÆÊ•§„‡† ÆÁ®·‚™® Ì™‡†≠†
     int 10h
     ret
 CLRSCR endp
+
+PRINT_NIBBLE PROC near
+    cmp AL, 10
+    jl is_digit
+    add AL, 'A'-10
+    jmp print_it
+is_digit:
+    add AL, '0'
+print_it:
+    mov DL, AL
+    mov AH, 02h
+    int 21h
+    ret
+PRINT_NIBBLE ENDP
+
 code ends
-end main 
-; åÆ¶≠Æ ´® ·ÆÂ‡†≠®‚Ï ≠† ·‚•™ ¢ÎßÆ¢Æ¢ (?) ØÆ·Á®‚†≠≠Î• Ø‡ÆË´Î¨ ·•£¨•≠‚Æ¨ ™Æ§†.
-; í.•. ¨Æ¶≠Æ ´® ß†Ø„·‚®‚Ï §¢• ØÆ§‡Ô§ Ø‡Æ£‡†¨¨Î ≠† Æ§≠Æ¨ ·•£¨•≠‚• §†≠≠ÎÂ.
+END MAIN

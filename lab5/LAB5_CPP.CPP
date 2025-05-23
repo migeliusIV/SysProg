@@ -1,19 +1,21 @@
- #include <iostream.h>
- #include <iomanip.h>
+#include <stdio.h>
+// #include <iostream.h>
 
- const double koef = 2.54;
+//const double koef = 2.54;
+void calculate() {
+   double a = double(10.2);
+   double koef = 2.54;
+   scanf("%lf", &a);
 
- extern "C" {
-	void calculate() {
-		double a = 0;
-		double res = 0;
-		cin >> a;
-		res = a / koef;
-		cout << setprecision(2) << res << endl;
-	}
- }
+   double res = double(10.2);
+   res = a / koef;
+   printf("%lf\n", res);
+   // cout << "12345";
+   // printf("12345\n");
+   return;
+}
 
- int main(){
-	calculate();
-	return 0;
- }
+extern"C" int main() {
+    calculate();
+    return 0;
+}
